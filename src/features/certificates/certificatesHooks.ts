@@ -22,6 +22,7 @@ export function certificateKey(uid: string, certificateId: string) {
 export function useCertificates(uid: string) {
   return useQuery({
     queryKey: certificatesKey(uid),
+    enabled: !!uid,
     queryFn: () => listCertificates(uid),
   });
 }
@@ -29,6 +30,7 @@ export function useCertificates(uid: string) {
 export function useCertificate(uid: string, certificateId: string) {
   return useQuery({
     queryKey: certificateKey(uid, certificateId),
+    enabled: !!uid && !!certificateId,
     queryFn: () => getCertificate(uid, certificateId),
   });
 }

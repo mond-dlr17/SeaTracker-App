@@ -61,7 +61,33 @@ async function getOrCreateSampleCertificateImage(): Promise<{
   return { localUri, filename, contentType: 'image/png' };
 }
 
+async function uriToBlob(uri: string): Promise<Blob> {
+  // RN / Expo can behave differently for `file://` vs `content://` URIs.
+  // Try `fetch` first; if it fails, fall back to `XMLHttpRequest`.
+  try {
+    const res = await fetch(uri);
+    return await res.blob();
+  } catch {
+    return await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onerror = () => reject(new Error('Failed to download image for upload.'));
+      xhr.onload = () => {
+        // Some RN transports return status 0 for local resources.
+        if (xhr.status && xhr.status >= 400) {
+          reject(new Error(`Failed to download image: HTTP ${xhr.status}`));
+          return;
+        }
+        resolve(xhr.response as Blob);
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+  }
+}
+
 export async function listCertificates(uid: string): Promise<Certificate[]> {
+  if (!uid) return [];
   // Avoid Firestore query failures when `expiryDate` contains mixed types (string vs Timestamp).
   // We'll sort locally after normalizing.
   const snap = await getDocs(certsCollection(uid));
@@ -83,6 +109,7 @@ export async function listCertificates(uid: string): Promise<Certificate[]> {
 }
 
 export async function getCertificate(uid: string, certificateId: string): Promise<Certificate | null> {
+  if (!uid || !certificateId) return null;
   const snap = await getDoc(doc(firestore, 'users', uid, 'certificates', certificateId));
   if (!snap.exists()) return null;
   const data = snap.data() as any;
@@ -134,8 +161,7 @@ export async function uploadCertificateFile(params: {
   filename: string;
   contentType?: string;
 }) {
-  const res = await fetch(params.localUri);
-  const blob = await res.blob();
+  const blob = await uriToBlob(params.localUri);
   const path = `users/${params.uid}/certificates/${params.certificateId}/${params.filename}`;
   const storageRef = ref(storage, path);
 

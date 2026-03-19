@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useCertificates, useRemoveCertificate, useSeedSampleCertificates } from '../../../features/certificates/certificatesHooks';
@@ -22,23 +23,40 @@ export default function CertificateListRoute() {
   const hasAutoSeededRef = useRef(false);
 
   const data = certsQuery.data ?? [];
-  const warningCount = data.filter((c) => getCertificateStatus(c.expiryDate) === 'warning').length;
-  const expiredCount = data.filter((c) => getCertificateStatus(c.expiryDate) === 'expired').length;
+  const warningCount = data.filter((c) => getCertificateStatus(c.expiryDate, c.issueDate) === 'warning').length;
+  const expiredCount = data.filter((c) => getCertificateStatus(c.expiryDate, c.issueDate) === 'expired').length;
   const alertCount = warningCount + expiredCount;
 
-  if (!uid) return null;
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      // Ensure the list reflects any changes when coming back from other screens.
+      certsQuery.refetch();
+    }, [uid, certsQuery.refetch]),
+  );
 
   useEffect(() => {
     // Developer convenience: auto-seed samples once for demo/testing.
     if (!__DEV__) return;
-    if (certsQuery.isLoading || certsQuery.isError) return;
+    if (certsQuery.isLoading || certsQuery.isFetching || certsQuery.isError) return;
     if (!uid) return;
     if (data.length > 0) return;
     if (seedMut.isPending) return;
     if (hasAutoSeededRef.current) return;
     hasAutoSeededRef.current = true;
     seedMut.mutate();
-  }, [certsQuery.isError, certsQuery.isLoading, data.length, seedMut.isPending, uid]);
+  }, [certsQuery.isError, certsQuery.isLoading, certsQuery.isFetching, data.length, seedMut.isPending, uid]);
+
+  const renderAlertCardText = () => {
+    if (warningCount > 0 && expiredCount > 0) {
+      const total = warningCount + expiredCount;
+      return `${total} Certificate${total > 1 ? 's' : ''} Needing Attention.`;
+    }
+    const total = warningCount > 0 ? warningCount : expiredCount;
+    return `${total} Certificate${total > 1 ? 's' : ''} ${warningCount > 0 ? 'Warning' : 'Expired'}.`;
+  };
+
+  if (!uid) return null;
 
   return (
     <Screen>
@@ -59,7 +77,7 @@ export default function CertificateListRoute() {
             {alertCount > 0 && (
               <AlertCard
                 tone={expiredCount > 0 ? 'error' : 'warning'}
-                message={`${alertCount} Certificate${alertCount !== 1 ? 's' : ''} ${expiredCount > 0 ? 'Expired' : 'Warning'}.`}
+                message={renderAlertCardText()}
                 style={styles.alertCard}
               />
             )}
@@ -71,7 +89,7 @@ export default function CertificateListRoute() {
         }
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => {
-          const status = getCertificateStatus(item.expiryDate);
+          const status = getCertificateStatus(item.expiryDate,item.issueDate);
           const tone = status === 'valid' ? 'green' : status === 'warning' ? 'yellow' : 'red';
           const label = status === 'valid' ? 'VALID' : status === 'warning' ? 'WARNING' : 'EXPIRED';
 

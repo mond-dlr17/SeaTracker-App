@@ -36,7 +36,7 @@ function RenewalTimeline({
   const total = end - start;
   const elapsed = Math.max(0, now - start);
   const progress = total > 0 ? Math.min(1, elapsed / total) : 0;
-  const status = getCertificateStatus(expiryDate);
+  const status = getCertificateStatus(expiryDate,issueDate);
   const daysLeft = dayjs(expiryDate).startOf('day').diff(dayjs().startOf('day'), 'day');
 
   return (
@@ -87,7 +87,12 @@ export default function EditCertificateRoute() {
       return () => {
         // Restore tab bar style when leaving this screen.
         parent?.setOptions?.({
-          tabBarStyle: { backgroundColor: Colors.surface, borderTopColor: Colors.border },
+          tabBarStyle: {
+            display: 'flex',
+            backgroundColor: 'transparent',
+            borderTopWidth: 0,
+            elevation: 0,
+          },
         });
       };
     }, [navigation]),
@@ -290,6 +295,14 @@ export default function EditCertificateRoute() {
               if (res.canceled) return;
               const file = res.assets[0];
               if (!file?.uri) return;
+
+              const size = (file as any).size as number | undefined;
+              const maxSizeBytes = 2 * 1024 * 1024;
+              if (typeof size === 'number' && size > maxSizeBytes) {
+                Alert.alert('Image too large', 'Please choose an image up to 2MB.');
+                return;
+              }
+
               const mimeType = file.mimeType ?? '';
               const ext = mimeType.includes('png')
                 ? 'png'

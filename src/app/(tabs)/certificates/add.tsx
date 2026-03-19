@@ -6,7 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useAddCertificate, useCertificates } from '../../../features/certificates/certificatesHooks';
-import { uploadCertificateFile } from '../../../features/certificates/certificatesService';
+import { removeCertificate, uploadCertificateFile } from '../../../features/certificates/certificatesService';
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
 import { Button } from '../../../shared/components/Button';
@@ -30,7 +30,12 @@ export default function AddCertificateRoute() {
       return () => {
         // Restore tab bar style when leaving this screen.
         parent?.setOptions?.({
-          tabBarStyle: { backgroundColor: Colors.surface, borderTopColor: Colors.border },
+          tabBarStyle: {
+            display: 'flex',
+            backgroundColor: 'transparent',
+            borderTopWidth: 0,
+            elevation: 0,
+          },
         });
       };
     }, [navigation]),
@@ -83,8 +88,9 @@ export default function AddCertificateRoute() {
     if (!file?.uri) return;
 
     const size = (file as any).size as number | undefined;
-    if (typeof size === 'number' && size > 10 * 1024 * 1024) {
-      Alert.alert('Image too large', 'Please choose an image up to 10MB.');
+    const maxSizeBytes = 2 * 1024 * 1024;
+    if (typeof size === 'number' && size > maxSizeBytes) {
+      Alert.alert('Image too large', 'Please choose an image up to 2MB.');
       return;
     }
 
@@ -175,8 +181,8 @@ export default function AddCertificateRoute() {
                 {
                   onSuccess: async (certificateId) => {
                     if (pickedImage) {
+                      setImageUploading(true);
                       try {
-                        setImageUploading(true);
                         await uploadCertificateFile({
                           uid,
                           certificateId,
@@ -185,10 +191,17 @@ export default function AddCertificateRoute() {
                           contentType: pickedImage.contentType,
                         });
                       } catch (e) {
-                        // Certificate is still created; upload failure should not block saving.
+                        // Best-effort cleanup so users don't end up with an orphan cert without photo.
                         // eslint-disable-next-line no-console
                         console.error('uploadCertificateFile failed:', e);
-                        Alert.alert('Couldn’t upload image', 'You can add it later from the certificate detail page.');
+                        try {
+                          await removeCertificate(uid, certificateId);
+                        } catch {
+                          // eslint-disable-next-line no-console
+                          console.warn('removeCertificate cleanup failed; keeping orphan cert.', e);
+                        }
+                        Alert.alert('Couldn’t upload image', 'Please try again and make sure the file is accessible on your device.');
+                        return;
                       } finally {
                         setImageUploading(false);
                       }
