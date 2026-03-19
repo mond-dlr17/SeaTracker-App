@@ -2,19 +2,24 @@ import { Tabs } from 'expo-router';
 import { View } from 'react-native';
 import { Colors } from '../../shared/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { FloatingTabBar } from './_FloatingTabBar';
 
 export default function TabsLayout() {
   return (
     <Tabs
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerStyle: { backgroundColor: Colors.surface },
         headerTintColor: Colors.text,
         headerShown: false,
         headerTitleStyle: { fontWeight: '800', fontSize: 18 },
-        tabBarStyle: { backgroundColor: Colors.surface, borderTopColor: Colors.border },
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: Colors.muted,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', marginBottom: 6 },
+        tabBarStyle: {
+          backgroundColor: 'transparent',
+          borderTopWidth: 0,
+          elevation: 0,
+          paddingTop: 0,
+          paddingBottom: 0,
+        },
       }}
     >
       <Tabs.Screen name="certificates" options={{ title: 'Certificates', tabBarIcon: ({ color, size }) => <Ionicons name="medal" color={color} size={size} /> }} />
