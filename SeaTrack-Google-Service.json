@@ -12,7 +12,12 @@
           "package_name": "com.drxlabs.seatrack.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "994477421599-1huve8finfbpnt5cdt60h3i1qgoaekd9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCvdyRGVg5WNJFiOIb-rbg6NuLn13EJHO4"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "994477421599-1huve8finfbpnt5cdt60h3i1qgoaekd9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "994477421599-gc9f6m97skvni8l56id0u64uhlt9k3kf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.drxlabs.seatrack.app"
+              }
+            }
+          ]
         }
       }
     }
