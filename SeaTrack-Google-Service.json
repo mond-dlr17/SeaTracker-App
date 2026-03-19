@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "994477421599",
+    "project_id": "seatrack-e0164",
+    "storage_bucket": "seatrack-e0164.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994477421599:android:f48d16281fa599c690112a",
+        "android_client_info": {
+          "package_name": "com.drxlabs.seatrack.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvdyRGVg5WNJFiOIb-rbg6NuLn13EJHO4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
