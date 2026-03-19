@@ -1,9 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import {
-  getAuth,
-  initializeAuth,
-  getReactNativePersistence,
-} from '@firebase/auth';
+import * as FirebaseAuth from '@firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,8 +29,13 @@ function getApp(): { app: ReturnType<typeof initializeApp>; isNew: boolean } {
 const { app, isNew } = getApp();
 
 // Persist auth in AsyncStorage so session survives app restarts; use getAuth when app already exists (e.g. hot reload)
-const persistence = getReactNativePersistence(AsyncStorage);
-export const firebaseAuth = isNew ? initializeAuth(app, { persistence }) : getAuth(app);
+const persistence =
+  typeof (FirebaseAuth as any).getReactNativePersistence === 'function' ? (FirebaseAuth as any).getReactNativePersistence(AsyncStorage) : undefined;
+export const firebaseAuth = isNew
+  ? persistence
+    ? FirebaseAuth.initializeAuth(app, { persistence })
+    : FirebaseAuth.initializeAuth(app)
+  : FirebaseAuth.getAuth(app);
 export const firestore = getFirestore(app);
 export const storage = getStorage(app);
 

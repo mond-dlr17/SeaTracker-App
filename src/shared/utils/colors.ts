@@ -3,21 +3,21 @@
  */
 export const Colors = {
   /** Primary – buttons, primary text */
-  primary: '#0D1B2A',
+  primary: '#0B1F3A',
   /** Accent – links, active states, chat bubbles */
-  accent: '#3A86FF',
+  accent: '#1E88E5',
   /** Background – off-white with optional dot grid */
-  bg: '#F5F6F8',
+  bg: '#F8FAFC',
   /** Card/surface – white */
   surface: '#FFFFFF',
   /** Secondary surface (inputs, secondary buttons) */
-  surface2: '#F0F2F5',
+  surface2: '#E2E8F0',
   /** Primary text */
-  text: '#0D1B2A',
+  text: '#0B1F3A',
   /** Secondary / muted text */
-  muted: '#6B7280',
+  muted: '#64748B',
   /** Borders */
-  border: '#E5E7EB',
+  border: '#E2E8F0',
   /** Status: valid */
   valid: '#22C55E',
   /** Status: warning */
@@ -25,8 +25,8 @@ export const Colors = {
   /** Status: expired */
   expired: '#EF4444',
   /** Legacy aliases for components */
-  navy: '#0D1B2A',
-  blue: '#3A86FF',
+  navy: '#0B1F3A',
+  blue: '#1E88E5',
   green: '#22C55E',
   yellow: '#F59E0B',
   red: '#EF4444',

@@ -38,19 +38,19 @@ export function TextField({
 const styles = StyleSheet.create({
   wrap: { gap: Spacing.fieldGap },
   label: {
-    color: Colors.muted,
+    color: Colors.primary,
     fontWeight: Typography.labelWeight,
-    fontSize: Typography.labelSize,
+    fontSize: 14,
     letterSpacing: 0.5,
   },
   input: {
-    height: 48,
+    height: 56,
     borderRadius: Radius.button,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
     color: Colors.text,
-    paddingHorizontal: Spacing.md,
-    fontSize: Typography.bodySize,
+    paddingHorizontal: Spacing.lg,
+    fontSize: 16,
   },
 });

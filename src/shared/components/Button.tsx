@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, ActivityIndicator, type ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, StyleSheet, Text, ActivityIndicator, View, type TextStyle, type ViewStyle } from 'react-native';
 import { Colors } from '../utils/colors';
-import { Radius, Spacing, Typography } from '../utils/theme';
+import { Radius, Spacing } from '../utils/theme';
 
 export function Button({
   title,
@@ -10,6 +11,9 @@ export function Button({
   variant = 'primary',
   style,
   fullWidth,
+  iconLeft,
+  iconRight,
+  textStyle,
 }: {
   title: string;
   onPress: () => void;
@@ -18,6 +22,9 @@ export function Button({
   variant?: 'primary' | 'secondary' | 'danger';
   style?: ViewStyle;
   fullWidth?: boolean;
+  iconLeft?: ReactNode;
+  iconRight?: ReactNode;
+  textStyle?: TextStyle;
 }) {
   const isDisabled = disabled || loading;
   return (
@@ -36,7 +43,11 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? Colors.white : Colors.text} />
       ) : (
-        <Text style={[styles.text, variant === 'secondary' && styles.textSecondary]}>{title}</Text>
+        <View style={styles.contentRow}>
+          {iconLeft ? <View style={styles.iconLeftWrap}>{iconLeft}</View> : null}
+          <Text style={[styles.text, variant === 'secondary' && styles.textSecondary, textStyle]}>{title}</Text>
+          {iconRight ? <View style={styles.iconRightWrap}>{iconRight}</View> : null}
+        </View>
       )}
     </Pressable>
   );
@@ -50,18 +61,29 @@ const variantStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
+    minHeight: 56,
     borderRadius: Radius.button,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
   },
   fullWidth: { width: '100%' },
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconLeftWrap: {
+    marginRight: Spacing.sm,
+  },
+  iconRightWrap: {
+    marginLeft: Spacing.sm,
+  },
   text: {
     color: Colors.white,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
   textSecondary: { color: Colors.text },
   pressed: { opacity: 0.9 },

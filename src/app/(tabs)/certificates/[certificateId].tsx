@@ -10,15 +10,18 @@ import {
   useCertificate,
   useUpdateCertificate,
   useUploadCertificateFile,
+  useRemoveCertificate,
 } from '../../../features/certificates/certificatesHooks';
 import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
 import { Button } from '../../../shared/components/Button';
 import { TextField } from '../../../shared/components/TextField';
+import { storage } from '../../../shared/services/firebase';
 import { Colors } from '../../../shared/utils/colors';
 import { Spacing, Typography } from '../../../shared/utils/theme';
 import { isValidISODate } from '../../../shared/utils/validation';
+import { deleteObject, ref } from 'firebase/storage';
 
 function RenewalTimeline({
   issueDate,
@@ -99,6 +102,7 @@ export default function EditCertificateRoute() {
   const certQuery = useCertificate(uid, certificateId);
   const updateMut = useUpdateCertificate(uid, certificateId);
   const uploadMut = useUploadCertificateFile(uid, certificateId);
+  const removeMut = useRemoveCertificate(uid);
 
   const cert = certQuery.data ?? null;
 
@@ -209,6 +213,40 @@ export default function EditCertificateRoute() {
               }}
             />
             <Button title="Cancel" variant="secondary" onPress={() => setEditing(false)} />
+            <Button
+              title={removeMut.isPending ? 'Deleting…' : 'Delete'}
+              variant="danger"
+              disabled={updateMut.isPending || uploadMut.isPending}
+              loading={removeMut.isPending}
+              onPress={() => {
+                Alert.alert('Delete certificate?', 'This cannot be undone.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        // Best-effort storage cleanup; if it fails we still delete the DB record.
+                        if (cert?.filePath) {
+                          await deleteObject(ref(storage, cert.filePath));
+                        }
+                      } catch {
+                        // eslint-disable-next-line no-console
+                        console.warn('Storage delete failed; continuing with Firestore delete.');
+                      }
+
+                      removeMut.mutate(certificateId, {
+                        onSuccess: () => {
+                          router.replace('/(tabs)/certificates');
+                        },
+                        onError: () => Alert.alert("Couldn't delete", 'Please try again.'),
+                      });
+                    },
+                  },
+                ]);
+              }}
+              style={styles.deleteBtn}
+            />
           </Card>
         ) : (
           <>
@@ -394,4 +432,5 @@ const styles = StyleSheet.create({
   primaryBtn: { marginBottom: Spacing.sm },
   secondaryBtn: { marginBottom: Spacing.sm },
   gap: { height: Spacing.itemGap },
+  deleteBtn: { marginTop: Spacing.sm },
 });

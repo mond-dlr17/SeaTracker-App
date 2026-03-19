@@ -99,7 +99,7 @@ export default function ProfileRoute() {
               style: 'destructive',
               onPress: async () => {
                 await logout();
-                router.replace('/(auth)/login');
+                router.replace('/(auth)/welcome');
               },
             },
           ]);

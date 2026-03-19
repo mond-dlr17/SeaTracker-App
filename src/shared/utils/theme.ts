@@ -26,9 +26,9 @@ export const Spacing = {
 
 export const Radius = {
   /** Cards, modals */
-  card: 18,
+  card: 16,
   /** Buttons, inputs */
-  button: 10,
+  button: 16,
   /** Pills, badges */
   pill: 999,
 } as const;

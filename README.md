@@ -27,7 +27,7 @@ npm run web
 
 Routes live under `src/app/`:
 
-- Auth: `src/app/(auth)/login.tsx`, `src/app/(auth)/register.tsx`
+- Auth: `src/app/(auth)/welcome.tsx`, `src/app/(auth)/login.tsx`, `src/app/(auth)/register.tsx`
 - Tabs: `src/app/(tabs)/...`
   - Certificates: `src/app/(tabs)/certificates/*`
   - Training: `src/app/(tabs)/training/index.tsx`
