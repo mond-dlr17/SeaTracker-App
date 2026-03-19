@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useAddCertificate, useCertificates } from '../../../features/certificates/certificatesHooks';
+import { uploadCertificateFile } from '../../../features/certificates/certificatesService';
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
 import { Button } from '../../../shared/components/Button';
@@ -42,6 +44,8 @@ export default function AddCertificateRoute() {
   const [name, setName] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [pickedImage, setPickedImage] = useState<null | { localUri: string; filename: string; contentType?: string }>(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const isPremium = !!profile?.isPremium;
   const certCount = certsQuery.data?.length ?? 0;
@@ -49,14 +53,58 @@ export default function AddCertificateRoute() {
 
   const helper = useMemo(() => {
     if (isPremium) return null;
+
     return (
-      <Text style={styles.helper}>
-        Free plan: up to 3 certificates ({certCount}/3). Upgrade to Premium for unlimited.
-      </Text>
+      <View>
+        <Text style={styles.helper}>
+          Free plan: up to 3 certificates ({certCount}/3). Upgrade to Premium for unlimited.
+        </Text>
+        {blocked && (
+          <Button
+            title="Upgrade to Premium"
+            variant="secondary"
+            onPress={() => router.push('/upgrade-premium')}
+            style={styles.upgradeBtn}
+          />
+        )}
+      </View>
     );
-  }, [certCount, isPremium]);
+  }, [blocked, certCount, isPremium]);
 
   if (!uid) return null;
+
+  const pickImage = async () => {
+    const res = await DocumentPicker.getDocumentAsync({
+      type: 'image/*',
+      copyToCacheDirectory: true,
+    });
+    if (res.canceled) return;
+    const file = res.assets[0];
+    if (!file?.uri) return;
+
+    const size = (file as any).size as number | undefined;
+    if (typeof size === 'number' && size > 10 * 1024 * 1024) {
+      Alert.alert('Image too large', 'Please choose an image up to 10MB.');
+      return;
+    }
+
+    const mimeType = file.mimeType ?? '';
+    const ext = mimeType.includes('png')
+      ? 'png'
+      : mimeType.includes('jpeg') || mimeType.includes('jpg')
+        ? 'jpg'
+        : mimeType.includes('webp')
+          ? 'webp'
+          : mimeType.includes('gif')
+            ? 'gif'
+            : 'png';
+    const filename = file.name ?? `certificate-image.${ext}`;
+    setPickedImage({
+      localUri: file.uri,
+      filename,
+      contentType: mimeType || undefined,
+    });
+  };
 
   return (
     <Screen>
@@ -97,21 +145,54 @@ export default function AddCertificateRoute() {
               />
             </View>
           </View>
-          <View style={styles.uploadZone}>
-            <Text style={styles.uploadText}>Scan or upload file (PDF, PNG, or JPG up to 10MB)</Text>
-          </View>
+          <Pressable onPress={pickImage} style={styles.uploadZone}>
+            {pickedImage ? (
+              <View style={styles.previewInner}>
+                <Image source={{ uri: pickedImage.localUri }} style={styles.previewImage} />
+                <Text style={styles.previewText} numberOfLines={1}>
+                  {pickedImage.filename}
+                </Text>
+                <Text style={styles.previewHint}>Tap to replace</Text>
+              </View>
+            ) : (
+              <Text style={styles.uploadText}>Scan or upload an image (PNG, JPG, or WEBP up to 10MB)</Text>
+            )}
+          </Pressable>
           <Button
-            title="Save Certificate"
-            disabled={blocked}
-            loading={addMut.isPending}
+            title={blocked ? 'Upgrade to Premium' : 'Save Certificate'}
+            disabled={addMut.isPending || imageUploading}
+            loading={addMut.isPending || imageUploading}
             onPress={() => {
+              if (blocked) {
+                router.push('/upgrade-premium');
+                return;
+              }
               if (!name.trim()) return Alert.alert('Missing name', 'Please enter a certificate name.');
               if (!isValidISODate(issueDate)) return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
               if (!isValidISODate(expiryDate)) return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
               addMut.mutate(
                 { name, issueDate, expiryDate },
                 {
-                  onSuccess: (certificateId) => {
+                  onSuccess: async (certificateId) => {
+                    if (pickedImage) {
+                      try {
+                        setImageUploading(true);
+                        await uploadCertificateFile({
+                          uid,
+                          certificateId,
+                          localUri: pickedImage.localUri,
+                          filename: pickedImage.filename,
+                          contentType: pickedImage.contentType,
+                        });
+                      } catch (e) {
+                        // Certificate is still created; upload failure should not block saving.
+                        // eslint-disable-next-line no-console
+                        console.error('uploadCertificateFile failed:', e);
+                        Alert.alert('Couldn’t upload image', 'You can add it later from the certificate detail page.');
+                      } finally {
+                        setImageUploading(false);
+                      }
+                    }
                     router.replace(`/(tabs)/certificates/${certificateId}`);
                   },
                   onError: (e) => {
@@ -179,10 +260,39 @@ const styles = StyleSheet.create({
     color: Colors.muted,
     fontSize: Typography.bodySize,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  previewInner: {
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  previewImage: {
+    width: 140,
+    height: 90,
+    borderRadius: 8,
+    backgroundColor: Colors.surface2,
+  },
+  previewText: {
+    color: Colors.text,
+    fontSize: Typography.bodySize,
+    fontWeight: '700',
+    maxWidth: '100%',
+  },
+  previewHint: {
+    color: Colors.accent,
+    fontSize: Typography.bodySize,
+    fontWeight: '700',
   },
   helper: {
     color: Colors.muted,
     fontSize: Typography.bodySize,
     fontWeight: '700',
+  },
+
+  upgradeBtn: {
+    marginTop: Spacing.sm,
+    borderRadius: 16,
+    minHeight: 50,
   },
 });

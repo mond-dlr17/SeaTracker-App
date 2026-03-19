@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import dayjs from 'dayjs';
@@ -114,6 +114,13 @@ export default function EditCertificateRoute() {
     setExpiryDate(cert.expiryDate);
   }, [cert?.id]);
 
+  const imageUri = useMemo(() => {
+    if (!cert?.fileUrl) return undefined;
+    const candidate = cert.filePath ?? cert.fileUrl;
+    const isImage = /\.(png|jpe?g|webp|gif)$/i.test(candidate);
+    return isImage ? cert.fileUrl : undefined;
+  }, [cert?.filePath, cert?.fileUrl]);
+
   if (!uid) return null;
 
   if (certQuery.isLoading) {
@@ -149,112 +156,133 @@ export default function EditCertificateRoute() {
 
   return (
     <Screen>
-      <View style={styles.topBar}>
-        <Pressable onPress={() => router.back()} style={styles.topBarBtn}>
-          <Text style={styles.topBarBack}>← Back</Text>
-        </Pressable>
-        <Text style={styles.topBarTitle}>Certificate Detail</Text>
-        <Pressable onPress={() => setEditing(true)} style={styles.topBarBtn}>
-          <Text style={styles.topBarEdit}>Edit</Text>
-        </Pressable>
-      </View>
-      <View style={styles.hero}>
-        <View style={styles.heroPlaceholder} />
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.topBar}>
+          <Pressable onPress={() => router.back()} style={styles.topBarBtn}>
+            <Text style={styles.topBarBack}>← Back</Text>
+          </Pressable>
+          <Text style={styles.topBarTitle}>Certificate Detail</Text>
+          <Pressable onPress={() => setEditing(true)} style={styles.topBarBtn}>
+            <Text style={styles.topBarEdit}>Edit</Text>
+          </Pressable>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.certTitle}>{cert.name}</Text>
-        <Text style={styles.meta}>Certificate details</Text>
-      </View>
+        <View style={styles.hero}>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.heroImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.heroPlaceholder}>
+              <Text style={styles.heroPlaceholderText}>No image attached</Text>
+            </View>
+          )}
+        </View>
 
-      <Card style={styles.card}>
-        <RenewalTimeline issueDate={cert.issueDate} expiryDate={cert.expiryDate} />
-      </Card>
+        <View style={styles.section}>
+          <Text style={styles.certTitle}>{cert.name}</Text>
+          <Text style={styles.meta}>Certificate details</Text>
+        </View>
 
-      {editing ? (
         <Card style={styles.card}>
-          <Text style={styles.sectionLabel}>Edit details</Text>
-          <TextField label="Name" value={name} onChangeText={setName} />
-          <TextField label="Issue date (YYYY-MM-DD)" value={issueDate} onChangeText={setIssueDate} />
-          <TextField label="Expiry date (YYYY-MM-DD)" value={expiryDate} onChangeText={setExpiryDate} />
+          <RenewalTimeline issueDate={cert.issueDate} expiryDate={cert.expiryDate} />
+        </Card>
+
+        {editing ? (
+          <Card style={styles.card}>
+            <Text style={styles.sectionLabel}>Edit details</Text>
+            <TextField label="Name" value={name} onChangeText={setName} />
+            <TextField label="Issue date (YYYY-MM-DD)" value={issueDate} onChangeText={setIssueDate} />
+            <TextField label="Expiry date (YYYY-MM-DD)" value={expiryDate} onChangeText={setExpiryDate} />
+            <Button
+              title="Save changes"
+              loading={updateMut.isPending}
+              onPress={() => {
+                if (!name.trim()) return Alert.alert('Missing name', 'Please enter a certificate name.');
+                if (!isValidISODate(issueDate)) return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
+                if (!isValidISODate(expiryDate)) return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
+                updateMut.mutate(
+                  { name, issueDate, expiryDate },
+                  {
+                    onSuccess: () => setEditing(false),
+                    onError: () => Alert.alert("Couldn't update", 'Please try again.'),
+                  },
+                );
+              }}
+            />
+            <Button title="Cancel" variant="secondary" onPress={() => setEditing(false)} />
+          </Card>
+        ) : (
+          <>
+            <Button
+              title="Find Refresher Courses"
+              onPress={() => router.push('/(tabs)/training')}
+              style={styles.primaryBtn}
+            />
+            <Button title="Share PDF Copy" variant="secondary" onPress={() => {}} style={styles.secondaryBtn} />
+          </>
+        )}
+
+        <View style={styles.gap} />
+
+        <Card style={styles.card}>
+          <Text style={styles.sectionLabel}>Attachment</Text>
+          {cert.fileUrl ? (
+            <View style={styles.row}>
+              <Text style={styles.meta} numberOfLines={1}>
+                File uploaded
+              </Text>
+              <Button
+                title="Open"
+                variant="secondary"
+                onPress={() => Linking.openURL(cert.fileUrl!)}
+                style={styles.openBtn}
+              />
+            </View>
+          ) : (
+            <Text style={styles.meta}>No file uploaded yet.</Text>
+          )}
           <Button
-            title="Save changes"
-            loading={updateMut.isPending}
-            onPress={() => {
-              if (!name.trim()) return Alert.alert('Missing name', 'Please enter a certificate name.');
-              if (!isValidISODate(issueDate)) return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
-              if (!isValidISODate(expiryDate))
-                return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
-              updateMut.mutate(
-                { name, issueDate, expiryDate },
+            title="Upload file"
+            variant="secondary"
+            loading={uploadMut.isPending}
+            onPress={async () => {
+              const res = await DocumentPicker.getDocumentAsync({
+                type: '*/*',
+                copyToCacheDirectory: true,
+              });
+              if (res.canceled) return;
+              const file = res.assets[0];
+              if (!file?.uri) return;
+              const mimeType = file.mimeType ?? '';
+              const ext = mimeType.includes('png')
+                ? 'png'
+                : mimeType.includes('jpeg') || mimeType.includes('jpg')
+                  ? 'jpg'
+                  : mimeType.includes('webp')
+                    ? 'webp'
+                    : mimeType.includes('gif')
+                      ? 'gif'
+                      : '';
+              const filename = file.name ?? `certificate${ext ? `.${ext}` : ''}`;
+              uploadMut.mutate(
                 {
-                  onSuccess: () => setEditing(false),
-                  onError: () => Alert.alert("Couldn't update", 'Please try again.'),
+                  localUri: file.uri,
+                  filename,
+                  contentType: mimeType || undefined,
                 },
+                { onError: () => Alert.alert('Upload failed', 'Please try again.') },
               );
             }}
           />
-          <Button title="Cancel" variant="secondary" onPress={() => setEditing(false)} />
         </Card>
-      ) : (
-        <>
-          <Button
-            title="Find Refresher Courses"
-            onPress={() => router.push('/(tabs)/training')}
-            style={styles.primaryBtn}
-          />
-          <Button title="Share PDF Copy" variant="secondary" onPress={() => {}} style={styles.secondaryBtn} />
-        </>
-      )}
-
-      <View style={styles.gap} />
-
-      <Card style={styles.card}>
-        <Text style={styles.sectionLabel}>Attachment</Text>
-        {cert.fileUrl ? (
-          <View style={styles.row}>
-            <Text style={styles.meta} numberOfLines={1}>
-              File uploaded
-            </Text>
-            <Button
-              title="Open"
-              variant="secondary"
-              onPress={() => Linking.openURL(cert.fileUrl!)}
-              style={styles.openBtn}
-            />
-          </View>
-        ) : (
-          <Text style={styles.meta}>No file uploaded yet.</Text>
-        )}
-        <Button
-          title="Upload file"
-          variant="secondary"
-          loading={uploadMut.isPending}
-          onPress={async () => {
-            const res = await DocumentPicker.getDocumentAsync({
-              type: '*/*',
-              copyToCacheDirectory: true,
-            });
-            if (res.canceled) return;
-            const file = res.assets[0];
-            if (!file?.uri) return;
-            const filename = file.name ?? 'certificate';
-            uploadMut.mutate(
-              {
-                localUri: file.uri,
-                filename,
-                contentType: file.mimeType ?? undefined,
-              },
-              { onError: () => Alert.alert('Upload failed', 'Please try again.') },
-            );
-          }}
-        />
-      </Card>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: Spacing.xxl,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,6 +301,18 @@ const styles = StyleSheet.create({
   heroPlaceholder: {
     height: 160,
     backgroundColor: Colors.surface2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  heroPlaceholderText: {
+    color: Colors.muted,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  heroImage: {
+    width: '100%',
+    height: 160,
   },
   section: {
     marginBottom: Spacing.itemGap,
