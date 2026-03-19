@@ -1,6 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { Colors } from '../utils/colors';
+import { Radius, Spacing } from '../utils/theme';
 
 export function Card({ children, style }: PropsWithChildren<{ style?: ViewStyle }>) {
   return <View style={[styles.card, style]}>{children}</View>;
@@ -9,10 +10,13 @@ export function Card({ children, style }: PropsWithChildren<{ style?: ViewStyle 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
+    borderRadius: Radius.card,
+    padding: Spacing.cardPadding,
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
 });
-

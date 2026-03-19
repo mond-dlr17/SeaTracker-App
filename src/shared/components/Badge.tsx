@@ -1,12 +1,19 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../utils/colors';
+import { Radius } from '../utils/theme';
+
+const toneConfig = {
+  green: { bg: Colors.valid, text: Colors.white },
+  yellow: { bg: Colors.warning, text: Colors.white },
+  red: { bg: Colors.expired, text: Colors.white },
+  blue: { bg: Colors.accent, text: Colors.white },
+} as const;
 
 export function Badge({ label, tone }: { label: string; tone: 'green' | 'yellow' | 'red' | 'blue' }) {
-  const bg =
-    tone === 'green' ? Colors.green : tone === 'yellow' ? Colors.yellow : tone === 'red' ? Colors.red : Colors.blue;
+  const { bg, text } = toneConfig[tone];
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
-      <Text style={styles.text}>{label}</Text>
+      <Text style={[styles.text, { color: text }]}>{label.toUpperCase()}</Text>
     </View>
   );
 }
@@ -16,13 +23,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 999,
+    borderRadius: Radius.pill,
   },
   text: {
-    color: Colors.bg,
     fontWeight: '800',
-    fontSize: 12,
-    letterSpacing: 0.2,
+    fontSize: 11,
+    letterSpacing: 0.3,
   },
 });
-

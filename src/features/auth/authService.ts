@@ -1,11 +1,13 @@
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
   type AuthError,
   type UserCredential,
 } from 'firebase/auth';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import { firebaseAuth, firestore } from '../../shared/services/firebase';
 import type { UserProfile } from '../../domain/models/UserProfile';
@@ -78,6 +80,35 @@ export async function registerWithEmail(
     throw new Error('Account created but profile could not be saved. Please try signing in and update your profile.');
   }
 
+  return cred;
+}
+
+export async function loginWithGoogleIdToken(idToken: string): Promise<UserCredential> {
+  const credential = GoogleAuthProvider.credential(idToken);
+  const cred = await signInWithCredential(firebaseAuth, credential);
+
+  // Ensure we always have a user profile document so downstream tabs can read `profile`.
+  const uid = cred.user.uid;
+  const ref = doc(firestore, 'users', uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) return cred;
+
+  const now = Date.now();
+  const displayName = cred.user.displayName ?? '';
+  const email = cred.user.email ?? '';
+
+  const profile: Omit<UserProfile, 'id'> = {
+    email,
+    fullName: displayName || (email.includes('@') ? email.split('@')[0] : ''),
+    rank: '',
+    yearsOfExperience: 0,
+    vesselTypes: [],
+    isPremium: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await setDoc(ref, profile);
   return cred;
 }
 

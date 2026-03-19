@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
 import { Button } from '../../../shared/components/Button';
 import { Colors } from '../../../shared/utils/colors';
+import { Spacing, Typography } from '../../../shared/utils/theme';
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useCertificates } from '../../../features/certificates/certificatesHooks';
 import { aiAdvisor } from '../../../features/ai/aiService';
@@ -20,11 +21,15 @@ export default function AIAdvisorRoute() {
 
   return (
     <Screen>
-      <Card style={{ gap: 12 }}>
-        <Text style={styles.title}>AI Advisor</Text>
+      <View style={styles.header}>
+        <Text style={styles.overline}>AI MARINE ADVISOR</Text>
+        <Text style={styles.title}>Career Coach</Text>
         <Text style={styles.meta}>
           Ask SeaTrack what to focus on next based on your profile and certificate expiry dates.
         </Text>
+      </View>
+
+      <Card style={styles.card}>
         <Button
           title="What should I do next?"
           loading={loading}
@@ -43,21 +48,52 @@ export default function AIAdvisorRoute() {
       </Card>
 
       {suggestions ? (
-        <>
-          <Text style={{ height: 12 }} />
-          <Card style={{ gap: 8 }}>
-            <Text style={styles.title}>Suggestions</Text>
-            <Text style={styles.suggestions}>{suggestions}</Text>
-          </Card>
-        </>
+        <Card style={[styles.card, styles.suggestionsCard]}>
+          <Text style={styles.sectionLabel}>Suggestions</Text>
+          <Text style={styles.suggestions}>{suggestions}</Text>
+        </Card>
       ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { color: Colors.text, fontSize: 18, fontWeight: '900' },
-  meta: { color: Colors.muted, fontWeight: '700' },
-  suggestions: { color: Colors.text, fontWeight: '600', lineHeight: 20 },
+  header: {
+    marginBottom: Spacing.sectionGap,
+    gap: Spacing.sm,
+  },
+  overline: {
+    color: Colors.muted,
+    fontSize: Typography.labelSize,
+    fontWeight: Typography.labelWeight,
+    letterSpacing: 1,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: Typography.headingSize,
+    fontWeight: Typography.heroWeight,
+  },
+  meta: {
+    color: Colors.muted,
+    fontSize: Typography.bodySize,
+    fontWeight: Typography.bodyWeight,
+    lineHeight: 20,
+  },
+  card: {
+    marginBottom: Spacing.itemGap,
+  },
+  suggestionsCard: {
+    gap: Spacing.md,
+  },
+  sectionLabel: {
+    color: Colors.text,
+    fontSize: Typography.titleSize,
+    fontWeight: Typography.titleWeight,
+  },
+  suggestions: {
+    color: Colors.text,
+    fontWeight: Typography.bodyWeight,
+    lineHeight: 22,
+    fontSize: Typography.bodySize,
+  },
 });
-

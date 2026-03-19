@@ -1,14 +1,16 @@
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useCertificates, useRemoveCertificate } from '../../../features/certificates/certificatesHooks';
+import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
 import { Button } from '../../../shared/components/Button';
 import { Badge } from '../../../shared/components/Badge';
+import { AlertCard } from '../../../shared/components/AlertCard';
 import { Colors } from '../../../shared/utils/colors';
-import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
+import { Spacing, Typography } from '../../../shared/utils/theme';
 
 export default function CertificateListRoute() {
   const { user } = useAuth();
@@ -17,6 +19,9 @@ export default function CertificateListRoute() {
   const removeMut = useRemoveCertificate(uid);
 
   const data = certsQuery.data ?? [];
+  const expiringCount = data.filter((c) => getCertificateStatus(c.expiryDate) === 'expiring').length;
+  const expiredCount = data.filter((c) => getCertificateStatus(c.expiryDate) === 'expired').length;
+  const alertCount = expiringCount + expiredCount;
 
   if (!uid) return null;
 
@@ -27,29 +32,43 @@ export default function CertificateListRoute() {
         keyExtractor={(i) => i.id}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.h1}>Your certificates</Text>
-            <Button title="Add" onPress={() => router.push('/(tabs)/certificates/add')} style={{ width: 110 }} />
+            <Text style={styles.overline}>MARITIME COMMAND</Text>
+            <Text style={styles.greeting}>Good morning, Captain 👋</Text>
+            {alertCount > 0 && (
+              <AlertCard
+                tone={expiredCount > 0 ? 'error' : 'warning'}
+                message={`${alertCount} Certificate${alertCount !== 1 ? 's' : ''} ${expiredCount > 0 ? 'Expired' : 'Expiring'}.`}
+                style={styles.alertCard}
+              />
+            )}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Active Vault</Text>
+              <Text style={styles.filterLink}>Filter</Text>
+            </View>
           </View>
         }
-        contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => {
           const status = getCertificateStatus(item.expiryDate);
           const tone = status === 'valid' ? 'green' : status === 'expiring' ? 'yellow' : 'red';
-          const label = status === 'valid' ? 'Valid' : status === 'expiring' ? 'Expiring' : 'Expired';
+          const label = status === 'valid' ? 'VALID' : status === 'expiring' ? 'WARNING' : 'EXPIRED';
 
           return (
-            <Card>
+            <Card style={styles.certCard}>
               <View style={styles.row}>
-                <Text style={styles.title}>{item.name}</Text>
+                <View style={styles.certIcon} />
+                <View style={styles.certInfo}>
+                  <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.meta}>Expires {item.expiryDate}</Text>
+                </View>
                 <Badge label={label} tone={tone} />
               </View>
-              <Text style={styles.meta}>Expiry: {item.expiryDate}</Text>
               <View style={styles.actions}>
                 <Button
                   title="Edit"
                   variant="secondary"
                   onPress={() => router.push(`/(tabs)/certificates/${item.id}`)}
-                  style={{ flex: 1 }}
+                  style={styles.actionBtn}
                 />
                 <Button
                   title="Delete"
@@ -61,7 +80,7 @@ export default function CertificateListRoute() {
                       { text: 'Delete', style: 'destructive', onPress: () => removeMut.mutate(item.id) },
                     ]);
                   }}
-                  style={{ flex: 1 }}
+                  style={styles.actionBtn}
                 />
               </View>
             </Card>
@@ -71,7 +90,7 @@ export default function CertificateListRoute() {
           certsQuery.isLoading ? (
             <Text style={styles.muted}>Loading…</Text>
           ) : certsQuery.isError ? (
-            <Text style={styles.muted}>Couldn’t load certificates.</Text>
+            <Text style={styles.muted}>Couldn't load certificates.</Text>
           ) : (
             <Card>
               <Text style={styles.title}>No certificates yet</Text>
@@ -79,23 +98,120 @@ export default function CertificateListRoute() {
               <Button
                 title="Add certificate"
                 onPress={() => router.push('/(tabs)/certificates/add')}
-                style={{ marginTop: 12 }}
+                style={styles.addBtn}
               />
             </Card>
           )
         }
       />
+      <View style={styles.fabWrap} pointerEvents="box-none">
+        <Pressable onPress={() => router.push('/(tabs)/certificates/add')} style={styles.fab}>
+          <Text style={styles.fabText}>+</Text>
+        </Pressable>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { gap: 10, marginBottom: 10 },
-  h1: { color: Colors.text, fontSize: 22, fontWeight: '900' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  title: { color: Colors.text, fontSize: 16, fontWeight: '900', flex: 1 },
-  meta: { color: Colors.muted, marginTop: 8, fontWeight: '700' },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  muted: { color: Colors.muted, fontWeight: '700', marginTop: 12 },
+  header: {
+    marginBottom: Spacing.sectionGap,
+    gap: Spacing.sm,
+  },
+  overline: {
+    color: Colors.muted,
+    fontSize: Typography.labelSize,
+    fontWeight: Typography.labelWeight,
+    letterSpacing: 1,
+  },
+  greeting: {
+    color: Colors.text,
+    fontSize: Typography.headingSize,
+    fontWeight: Typography.heroWeight,
+  },
+  alertCard: {
+    marginTop: Spacing.sm,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+  },
+  sectionTitle: {
+    color: Colors.text,
+    fontSize: Typography.titleSize,
+    fontWeight: Typography.titleWeight,
+  },
+  filterLink: {
+    color: Colors.accent,
+    fontSize: Typography.bodySize,
+    fontWeight: '700',
+  },
+  listContent: {
+    paddingBottom: Spacing.xxl + 56,
+    gap: Spacing.itemGap,
+  },
+  certCard: {
+    gap: Spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  certIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: Colors.surface2,
+  },
+  certInfo: { flex: 1, minWidth: 0 },
+  title: {
+    color: Colors.text,
+    fontSize: Typography.titleSize,
+    fontWeight: Typography.titleWeight,
+  },
+  meta: {
+    color: Colors.muted,
+    marginTop: 2,
+    fontSize: Typography.bodySize,
+    fontWeight: Typography.bodyWeight,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  actionBtn: { flex: 1 },
+  addBtn: { marginTop: Spacing.md },
+  muted: {
+    color: Colors.muted,
+    fontWeight: '700',
+    marginTop: Spacing.md,
+  },
+  fabWrap: {
+    position: 'absolute',
+    right: Spacing.screenPaddingHorizontal,
+    bottom: Spacing.xl + 24,
+    alignSelf: 'flex-end',
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  fabText: {
+    color: Colors.white,
+    fontSize: 28,
+    fontWeight: '300',
+    lineHeight: 32,
+  },
 });
-

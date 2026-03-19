@@ -7,17 +7,16 @@ export default function TabsLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: Colors.surface },
         headerTintColor: Colors.text,
-        headerTitleStyle: { fontWeight: '800' },
+        headerTitleStyle: { fontWeight: '800', fontSize: 18 },
         tabBarStyle: { backgroundColor: Colors.surface, borderTopColor: Colors.border },
-        tabBarActiveTintColor: Colors.blue,
+        tabBarActiveTintColor: Colors.accent,
         tabBarInactiveTintColor: Colors.muted,
       }}
     >
       <Tabs.Screen name="certificates" options={{ title: 'Certificates' }} />
       <Tabs.Screen name="training" options={{ title: 'Training' }} />
-      <Tabs.Screen name="ai" options={{ title: 'AI' }} />
+      <Tabs.Screen name="ai" options={{ title: 'Assistant' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
   );
 }
-

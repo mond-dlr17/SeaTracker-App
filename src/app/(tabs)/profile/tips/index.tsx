@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Screen } from '../../../../shared/components/Screen';
 import { Card } from '../../../../shared/components/Card';
 import { Colors } from '../../../../shared/utils/colors';
+import { Spacing, Typography } from '../../../../shared/utils/theme';
 import { usePosts } from '../../../../features/posts/postsHooks';
 
 export default function TipsListRoute() {
@@ -15,7 +16,7 @@ export default function TipsListRoute() {
       <FlatList
         data={data}
         keyExtractor={(i) => i.id}
-        contentContainerStyle={{ gap: 12, paddingBottom: 24 }}
+        contentContainerStyle={{ gap: Spacing.itemGap, paddingBottom: Spacing.xxl }}
         renderItem={({ item }) => (
           <Card>
             <Text style={styles.title}>{item.title}</Text>
@@ -43,9 +44,9 @@ export default function TipsListRoute() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: Colors.text, fontSize: 16, fontWeight: '900' },
-  subtitle: { color: Colors.muted, fontWeight: '700', marginTop: 6, lineHeight: 18 },
-  link: { color: Colors.blue, fontWeight: '900', marginTop: 10 },
+  title: { color: Colors.text, fontSize: Typography.titleSize, fontWeight: Typography.titleWeight },
+  subtitle: { color: Colors.muted, fontWeight: '700', marginTop: Spacing.xs, lineHeight: 18 },
+  link: { color: Colors.accent, fontWeight: '700', marginTop: Spacing.sm },
   muted: { color: Colors.muted, fontWeight: '700' },
 });
 

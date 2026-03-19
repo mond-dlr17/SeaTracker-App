@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Colors } from '../utils/colors';
+import { Radius, Spacing, Typography } from '../utils/theme';
 
 export function TextField({
   label,
@@ -18,7 +19,7 @@ export function TextField({
 }) {
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>{label.toUpperCase()}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -35,16 +36,21 @@ export function TextField({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  label: { color: Colors.muted, fontWeight: '700' },
+  wrap: { gap: Spacing.fieldGap },
+  label: {
+    color: Colors.muted,
+    fontWeight: Typography.labelWeight,
+    fontSize: Typography.labelSize,
+    letterSpacing: 0.5,
+  },
   input: {
     height: 48,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.button,
+    borderWidth: 1,
     borderColor: Colors.border,
-    backgroundColor: Colors.surface2,
+    backgroundColor: Colors.surface,
     color: Colors.text,
-    paddingHorizontal: 12,
+    paddingHorizontal: Spacing.md,
+    fontSize: Typography.bodySize,
   },
 });
-

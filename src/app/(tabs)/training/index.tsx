@@ -5,6 +5,7 @@ import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
 import { TextField } from '../../../shared/components/TextField';
 import { Colors } from '../../../shared/utils/colors';
+import { Spacing, Typography } from '../../../shared/utils/theme';
 import { useTrainings } from '../../../features/trainings/trainingsHooks';
 
 export default function TrainingListRoute() {
@@ -14,17 +15,22 @@ export default function TrainingListRoute() {
 
   return (
     <Screen>
-      <View style={{ gap: 12, marginBottom: 12 }}>
+      <View style={styles.header}>
         <Text style={styles.title}>Training listings</Text>
-        <TextField label="Filter by courseType" value={courseType} onChangeText={setCourseType} placeholder="e.g. STCW" />
+        <TextField
+          label="Filter by course type"
+          value={courseType}
+          onChangeText={setCourseType}
+          placeholder="e.g. STCW"
+        />
       </View>
 
       <FlatList
         data={data}
         keyExtractor={(i) => i.id}
-        contentContainerStyle={{ gap: 12, paddingBottom: 24 }}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <Card style={{ gap: 6 }}>
+          <Card style={styles.itemCard}>
             <Text style={styles.itemTitle}>{item.title}</Text>
             <Text style={styles.meta}>
               {item.provider} · {item.location}
@@ -36,7 +42,7 @@ export default function TrainingListRoute() {
           q.isLoading ? (
             <Text style={styles.muted}>Loading…</Text>
           ) : q.isError ? (
-            <Text style={styles.muted}>Couldn’t load trainings.</Text>
+            <Text style={styles.muted}>Couldn't load trainings.</Text>
           ) : (
             <Card>
               <Text style={styles.itemTitle}>No trainings found</Text>
@@ -50,9 +56,35 @@ export default function TrainingListRoute() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: Colors.text, fontSize: 22, fontWeight: '900' },
-  itemTitle: { color: Colors.text, fontSize: 16, fontWeight: '900' },
-  meta: { color: Colors.muted, fontWeight: '700' },
-  muted: { color: Colors.muted, fontWeight: '700' },
+  header: {
+    gap: Spacing.itemGap,
+    marginBottom: Spacing.sectionGap,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: Typography.headingSize,
+    fontWeight: Typography.heroWeight,
+  },
+  listContent: {
+    gap: Spacing.itemGap,
+    paddingBottom: Spacing.xxl,
+  },
+  itemCard: {
+    gap: Spacing.xs,
+  },
+  itemTitle: {
+    color: Colors.text,
+    fontSize: Typography.titleSize,
+    fontWeight: Typography.titleWeight,
+  },
+  meta: {
+    color: Colors.muted,
+    fontSize: Typography.bodySize,
+    fontWeight: Typography.bodyWeight,
+  },
+  muted: {
+    color: Colors.muted,
+    fontWeight: '700',
+    marginTop: Spacing.md,
+  },
 });
-

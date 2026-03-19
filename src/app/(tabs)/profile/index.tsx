@@ -8,6 +8,7 @@ import { Card } from '../../../shared/components/Card';
 import { TextField } from '../../../shared/components/TextField';
 import { Button } from '../../../shared/components/Button';
 import { Colors } from '../../../shared/utils/colors';
+import { Spacing, Typography } from '../../../shared/utils/theme';
 import { logout, updateUserProfile } from '../../../features/auth/authService';
 import { ensurePushToken } from '../../../features/subscription/pushToken';
 
@@ -40,9 +41,12 @@ export default function ProfileRoute() {
 
   return (
     <Screen>
-      <Card style={{ gap: 12 }}>
+      <View style={styles.section}>
         <Text style={styles.title}>Your profile</Text>
         <Text style={styles.meta}>Subscription: {isPremium ? 'Premium' : 'Free'}</Text>
+      </View>
+
+      <Card style={styles.card}>
         <TextField label="Full name" value={fullName} onChangeText={setFullName} />
         <TextField label="Rank" value={rank} onChangeText={setRank} />
         <TextField
@@ -70,7 +74,7 @@ export default function ProfileRoute() {
                   .filter(Boolean),
               });
             } catch {
-              Alert.alert('Couldn’t save', 'Please try again.');
+              Alert.alert("Couldn't save", 'Please try again.');
             } finally {
               setSaving(false);
             }
@@ -78,11 +82,11 @@ export default function ProfileRoute() {
         />
       </Card>
 
-      <View style={{ height: 12 }} />
+      <View style={styles.gap} />
 
       <Button title="Tips & content" variant="secondary" onPress={() => router.push('/(tabs)/profile/tips')} />
 
-      <View style={{ height: 12 }} />
+      <View style={styles.gap} />
 
       <Button
         title="Logout"
@@ -106,7 +110,25 @@ export default function ProfileRoute() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: Colors.text, fontSize: 20, fontWeight: '900' },
-  meta: { color: Colors.muted, fontWeight: '800' },
+  section: {
+    marginBottom: Spacing.sectionGap,
+    gap: Spacing.xs,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: Typography.headingSize,
+    fontWeight: Typography.heroWeight,
+  },
+  meta: {
+    color: Colors.muted,
+    fontSize: Typography.bodySize,
+    fontWeight: '800',
+  },
+  card: {
+    gap: Spacing.itemGap,
+    marginBottom: Spacing.itemGap,
+  },
+  gap: {
+    height: Spacing.itemGap,
+  },
 });
-

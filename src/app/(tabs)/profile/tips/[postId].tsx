@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Screen } from '../../../../shared/components/Screen';
 import { Card } from '../../../../shared/components/Card';
 import { Colors } from '../../../../shared/utils/colors';
+import { Spacing, Typography } from '../../../../shared/utils/theme';
 import { usePost } from '../../../../features/posts/postsHooks';
 
 export default function TipDetailRoute() {
@@ -19,8 +20,8 @@ export default function TipDetailRoute() {
       ) : !post ? (
         <Text style={styles.muted}>Post not found.</Text>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-          <Card style={{ gap: 10 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: Spacing.xxl }}>
+          <Card style={{ gap: Spacing.itemGap }}>
             <Text style={styles.title}>{post.title}</Text>
             {post.subtitle ? <Text style={styles.subtitle}>{post.subtitle}</Text> : null}
             <Text style={styles.body}>{post.body}</Text>
@@ -32,9 +33,9 @@ export default function TipDetailRoute() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: Colors.text, fontSize: 20, fontWeight: '900' },
+  title: { color: Colors.text, fontSize: Typography.headingSize, fontWeight: Typography.heroWeight },
   subtitle: { color: Colors.muted, fontWeight: '700', lineHeight: 20 },
-  body: { color: Colors.text, fontWeight: '600', lineHeight: 22, marginTop: 6 },
+  body: { color: Colors.text, fontWeight: '600', lineHeight: 22, marginTop: Spacing.xs },
   muted: { color: Colors.muted, fontWeight: '700' },
 });
 
