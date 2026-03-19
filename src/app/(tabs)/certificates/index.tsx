@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
@@ -76,7 +76,7 @@ export default function CertificateListRoute() {
           const label = status === 'valid' ? 'VALID' : status === 'warning' ? 'WARNING' : 'EXPIRED';
 
           return (
-            <Card style={styles.certCard}>
+            <Card style={styles.certCard} onPress={() => router.push(`/(tabs)/certificates/${item.id}`)}>
               <View style={styles.row}>
                 <View style={styles.certIcon} />
                 <View style={styles.certInfo}>
@@ -84,26 +84,6 @@ export default function CertificateListRoute() {
                   <Text style={styles.meta}>Expires {item.expiryDate}</Text>
                 </View>
                 <Badge label={label} tone={tone} />
-              </View>
-              <View style={styles.actions}>
-                <Button
-                  title="Edit"
-                  variant="secondary"
-                  onPress={() => router.push(`/(tabs)/certificates/${item.id}`)}
-                  style={styles.actionBtn}
-                />
-                <Button
-                  title="Delete"
-                  variant="danger"
-                  loading={removeMut.isPending && removeMut.variables === item.id}
-                  onPress={() => {
-                    Alert.alert('Delete certificate?', 'This cannot be undone.', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Delete', style: 'destructive', onPress: () => removeMut.mutate(item.id) },
-                    ]);
-                  }}
-                  style={styles.actionBtn}
-                />
               </View>
             </Card>
           );

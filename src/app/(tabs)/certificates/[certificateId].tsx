@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import dayjs from 'dayjs';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
 import {
@@ -69,6 +70,26 @@ function RenewalTimeline({
 }
 
 export default function EditCertificateRoute() {
+  const navigation = useNavigation<any>();
+
+  useFocusEffect(
+    useCallback(() => {
+      const parent = navigation.getParent?.();
+
+      // Hide the bottom tabs while this screen is focused.
+      parent?.setOptions?.({
+        tabBarStyle: { display: 'none' },
+      });
+
+      return () => {
+        // Restore tab bar style when leaving this screen.
+        parent?.setOptions?.({
+          tabBarStyle: { backgroundColor: Colors.surface, borderTopColor: Colors.border },
+        });
+      };
+    }, [navigation]),
+  );
+
   const params = useLocalSearchParams<{ certificateId: string }>();
   const certificateId = params.certificateId ?? '';
 

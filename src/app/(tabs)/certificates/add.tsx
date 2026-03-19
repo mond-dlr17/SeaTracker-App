@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useAddCertificate, useCertificates } from '../../../features/certificates/certificatesHooks';
@@ -13,6 +14,26 @@ import { Spacing, Typography } from '../../../shared/utils/theme';
 import { isValidISODate } from '../../../shared/utils/validation';
 
 export default function AddCertificateRoute() {
+  const navigation = useNavigation<any>();
+
+  useFocusEffect(
+    useCallback(() => {
+      const parent = navigation.getParent?.();
+
+      // Hide the bottom tabs while this screen is focused.
+      parent?.setOptions?.({
+        tabBarStyle: { display: 'none' },
+      });
+
+      return () => {
+        // Restore tab bar style when leaving this screen.
+        parent?.setOptions?.({
+          tabBarStyle: { backgroundColor: Colors.surface, borderTopColor: Colors.border },
+        });
+      };
+    }, [navigation]),
+  );
+
   const { user, profile } = useAuth();
   const uid = user?.uid ?? '';
   const certsQuery = useCertificates(uid);
