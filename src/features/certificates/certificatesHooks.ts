@@ -8,6 +8,7 @@ import {
   removeCertificate,
   updateCertificate,
   uploadCertificateFile,
+  seedSampleCertificates,
 } from './certificatesService';
 
 export function certificatesKey(uid: string) {
@@ -76,6 +77,16 @@ export function useUploadCertificateFile(uid: string, certificateId: string) {
         qc.invalidateQueries({ queryKey: certificatesKey(uid) }),
         qc.invalidateQueries({ queryKey: certificateKey(uid, certificateId) }),
       ]);
+    },
+  });
+}
+
+export function useSeedSampleCertificates(uid: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => seedSampleCertificates(uid),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: certificatesKey(uid) });
     },
   });
 }

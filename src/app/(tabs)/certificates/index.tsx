@@ -1,8 +1,9 @@
+import { useEffect, useRef } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
-import { useCertificates, useRemoveCertificate } from '../../../features/certificates/certificatesHooks';
+import { useCertificates, useRemoveCertificate, useSeedSampleCertificates } from '../../../features/certificates/certificatesHooks';
 import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
@@ -17,13 +18,27 @@ export default function CertificateListRoute() {
   const uid = user?.uid ?? '';
   const certsQuery = useCertificates(uid);
   const removeMut = useRemoveCertificate(uid);
+  const seedMut = useSeedSampleCertificates(uid);
+  const hasAutoSeededRef = useRef(false);
 
   const data = certsQuery.data ?? [];
-  const expiringCount = data.filter((c) => getCertificateStatus(c.expiryDate) === 'expiring').length;
+  const warningCount = data.filter((c) => getCertificateStatus(c.expiryDate) === 'warning').length;
   const expiredCount = data.filter((c) => getCertificateStatus(c.expiryDate) === 'expired').length;
-  const alertCount = expiringCount + expiredCount;
+  const alertCount = warningCount + expiredCount;
 
   if (!uid) return null;
+
+  useEffect(() => {
+    // Developer convenience: auto-seed samples once for demo/testing.
+    if (!__DEV__) return;
+    if (certsQuery.isLoading || certsQuery.isError) return;
+    if (!uid) return;
+    if (data.length > 0) return;
+    if (seedMut.isPending) return;
+    if (hasAutoSeededRef.current) return;
+    hasAutoSeededRef.current = true;
+    seedMut.mutate();
+  }, [certsQuery.isError, certsQuery.isLoading, data.length, seedMut.isPending, uid]);
 
   return (
     <Screen>
@@ -37,7 +52,7 @@ export default function CertificateListRoute() {
             {alertCount > 0 && (
               <AlertCard
                 tone={expiredCount > 0 ? 'error' : 'warning'}
-                message={`${alertCount} Certificate${alertCount !== 1 ? 's' : ''} ${expiredCount > 0 ? 'Expired' : 'Expiring'}.`}
+                message={`${alertCount} Certificate${alertCount !== 1 ? 's' : ''} ${expiredCount > 0 ? 'Expired' : 'Warning'}.`}
                 style={styles.alertCard}
               />
             )}
@@ -50,8 +65,8 @@ export default function CertificateListRoute() {
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => {
           const status = getCertificateStatus(item.expiryDate);
-          const tone = status === 'valid' ? 'green' : status === 'expiring' ? 'yellow' : 'red';
-          const label = status === 'valid' ? 'VALID' : status === 'expiring' ? 'WARNING' : 'EXPIRED';
+          const tone = status === 'valid' ? 'green' : status === 'warning' ? 'yellow' : 'red';
+          const label = status === 'valid' ? 'VALID' : status === 'warning' ? 'WARNING' : 'EXPIRED';
 
           return (
             <Card style={styles.certCard}>
@@ -95,6 +110,12 @@ export default function CertificateListRoute() {
             <Card>
               <Text style={styles.title}>No certificates yet</Text>
               <Text style={styles.meta}>Add your first certificate to track expiry dates.</Text>
+              <Button
+                title={seedMut.isPending ? 'Adding samples…' : 'Add sample certificates'}
+                loading={seedMut.isPending}
+                onPress={() => seedMut.mutate()}
+                style={styles.addBtn}
+              />
               <Button
                 title="Add certificate"
                 onPress={() => router.push('/(tabs)/certificates/add')}

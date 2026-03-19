@@ -44,7 +44,7 @@ function RenewalTimeline({
             {
               width: `${progress * 100}%`,
               backgroundColor:
-                status === 'expired' ? Colors.expired : status === 'expiring' ? Colors.warning : Colors.valid,
+                status === 'expired' ? Colors.expired : status === 'warning' ? Colors.warning : Colors.valid,
             },
           ]}
         />

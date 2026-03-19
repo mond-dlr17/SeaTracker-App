@@ -1,6 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { Colors } from '../utils/colors';
+import { Radius, Spacing, Typography } from '../utils/theme';
 
 type Tone = 'warning' | 'error' | 'info';
 
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
   },
   message: {
     color: Colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: Typography.bodySize,
+    fontWeight: Typography.bodyWeight,
   },
 });

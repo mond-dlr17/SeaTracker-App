@@ -1,4 +1,4 @@
-export type CertificateStatus = 'valid' | 'expiring' | 'expired';
+export type CertificateStatus = 'valid' | 'warning' | 'expired';
 
 export type Certificate = {
   id: string;

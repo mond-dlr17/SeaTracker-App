@@ -20,7 +20,7 @@ export const Colors = {
   border: '#E5E7EB',
   /** Status: valid */
   valid: '#22C55E',
-  /** Status: warning / expiring */
+  /** Status: warning */
   warning: '#F59E0B',
   /** Status: expired */
   expired: '#EF4444',
