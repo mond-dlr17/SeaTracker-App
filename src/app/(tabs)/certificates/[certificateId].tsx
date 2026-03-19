@@ -12,6 +12,7 @@ import {
   useUploadCertificateFile,
   useRemoveCertificate,
 } from '../../../features/certificates/certificatesHooks';
+import { getCertificateIoniconsName } from '../../../features/certificates/certificateIcons';
 import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
@@ -19,7 +20,9 @@ import { Button } from '../../../shared/components/Button';
 import { TextField } from '../../../shared/components/TextField';
 import { storage } from '../../../shared/services/firebase';
 import { Colors } from '../../../shared/utils/colors';
+import { formatDate } from '../../../shared/utils/formatDate';
 import { Spacing, Typography } from '../../../shared/utils/theme';
+import { Ionicons } from '@expo/vector-icons';
 import { isValidISODate } from '../../../shared/utils/validation';
 import { deleteObject, ref } from 'firebase/storage';
 
@@ -58,8 +61,8 @@ function RenewalTimeline({
         <Text style={styles.dateLabel}>EXPIRES ON</Text>
       </View>
       <View style={styles.dateRow}>
-        <Text style={styles.dateValue}>{issueDate}</Text>
-        <Text style={styles.dateValue}>{expiryDate}</Text>
+        <Text style={styles.dateValue}>{formatDate(issueDate)}</Text>
+        <Text style={styles.dateValue}>{formatDate(expiryDate)}</Text>
       </View>
       {status !== 'valid' && (
         <Text style={[styles.warningText, status === 'expired' && styles.warningTextExpired]}>
@@ -181,6 +184,7 @@ export default function EditCertificateRoute() {
             <Image source={{ uri: imageUri }} style={styles.heroImage} resizeMode="cover" />
           ) : (
             <View style={styles.heroPlaceholder}>
+              <Ionicons name={getCertificateIoniconsName(cert.name)} size={48} color={Colors.accent} />
               <Text style={styles.heroPlaceholderText}>No image attached</Text>
             </View>
           )}
@@ -355,6 +359,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
   },
   heroPlaceholderText: {
     color: Colors.muted,
