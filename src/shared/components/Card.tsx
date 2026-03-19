@@ -1,9 +1,9 @@
 import { PropsWithChildren } from 'react';
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Colors } from '../utils/colors';
 import { Radius, Spacing } from '../utils/theme';
 
-export function Card({ children, style }: PropsWithChildren<{ style?: ViewStyle }>) {
+export function Card({ children, style }: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
   return <View style={[styles.card, style]}>{children}</View>;
 }
 

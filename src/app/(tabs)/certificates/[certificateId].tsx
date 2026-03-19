@@ -103,6 +103,19 @@ export default function EditCertificateRoute() {
     );
   }
 
+  if (certQuery.isError) {
+    return (
+      <Screen>
+        <Card style={styles.card}>
+          <Text style={styles.title}>Couldn't load certificate</Text>
+          <Text style={styles.meta}>{
+            String((certQuery.error as any)?.message ?? 'Unknown error')
+          }</Text>
+        </Card>
+      </Screen>
+    );
+  }
+
   if (!cert) {
     return (
       <Screen>

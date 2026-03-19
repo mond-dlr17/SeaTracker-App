@@ -93,7 +93,12 @@ export default function AddCertificateRoute() {
                   onSuccess: (certificateId) => {
                     router.replace(`/(tabs)/certificates/${certificateId}`);
                   },
-                  onError: () => Alert.alert("Couldn't save", 'Please try again.'),
+                  onError: (e) => {
+                    // Helpful for debugging permission/rules errors.
+                    // eslint-disable-next-line no-console
+                    console.error('addCertificate failed:', e);
+                    Alert.alert('Couldn’t save certificate', String((e as any)?.message ?? 'Please try again.'));
+                  },
                 },
               );
             }}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { useMutation } from '@tanstack/react-query';
 
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
@@ -14,8 +15,12 @@ export default function AIAdvisorRoute() {
   const { user, profile } = useAuth();
   const uid = user?.uid ?? '';
   const certsQuery = useCertificates(uid);
-  const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string>('');
+  const aiMut = useMutation({
+    mutationFn: () => aiAdvisor({ profile: profile!, certificates: certsQuery.data ?? [] }),
+    onSuccess: (data) => setSuggestions(data.suggestions ?? ''),
+    onError: () => Alert.alert('AI request failed', 'Check your API base URL and try again.'),
+  });
 
   if (!uid || !profile) return null;
 
@@ -32,23 +37,15 @@ export default function AIAdvisorRoute() {
       <Card style={styles.card}>
         <Button
           title="What should I do next?"
-          loading={loading}
+          loading={aiMut.isPending}
           onPress={async () => {
-            try {
-              setLoading(true);
-              const data = await aiAdvisor({ profile, certificates: certsQuery.data ?? [] });
-              setSuggestions(data.suggestions ?? '');
-            } catch {
-              Alert.alert('AI request failed', 'Check your API base URL and try again.');
-            } finally {
-              setLoading(false);
-            }
+            aiMut.mutate();
           }}
         />
       </Card>
 
       {suggestions ? (
-        <Card style={[styles.card, styles.suggestionsCard]}>
+      <Card style={[styles.card, styles.suggestionsCard as ViewStyle]}>
           <Text style={styles.sectionLabel}>Suggestions</Text>
           <Text style={styles.suggestions}>{suggestions}</Text>
         </Card>

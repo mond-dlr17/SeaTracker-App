@@ -6,8 +6,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  orderBy,
-  query,
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
@@ -18,6 +16,25 @@ import { firestore, storage } from '../../shared/services/firebase';
 
 function certsCollection(uid: string) {
   return collection(firestore, 'users', uid, 'certificates');
+}
+
+function normalizeToNumber(value: unknown): number {
+  if (typeof value === 'number') return value;
+  if (value && typeof value === 'object' && 'toDate' in value && typeof (value as any).toDate === 'function') {
+    return (value as any).toDate().valueOf();
+  }
+  return 0;
+}
+
+function normalizeToISODate(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && 'toDate' in value && typeof (value as any).toDate === 'function') {
+    const d = (value as any).toDate();
+    return dayjs(d).format('YYYY-MM-DD');
+  }
+  if (value instanceof Date) return dayjs(value).format('YYYY-MM-DD');
+  if (typeof value === 'number') return dayjs(value).format('YYYY-MM-DD');
+  return '';
 }
 
 const SAMPLE_CERT_IMAGE_FILENAME = 'sample-certificate.png';
@@ -45,15 +62,40 @@ async function getOrCreateSampleCertificateImage(): Promise<{
 }
 
 export async function listCertificates(uid: string): Promise<Certificate[]> {
-  const q = query(certsCollection(uid), orderBy('expiryDate', 'asc'));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Certificate, 'id'>) }));
+  // Avoid Firestore query failures when `expiryDate` contains mixed types (string vs Timestamp).
+  // We'll sort locally after normalizing.
+  const snap = await getDocs(certsCollection(uid));
+  const certs = snap.docs.map((d) => {
+    const data = d.data() as any;
+    return {
+      id: d.id,
+      name: String(data.name ?? ''),
+      issueDate: normalizeToISODate(data.issueDate),
+      expiryDate: normalizeToISODate(data.expiryDate),
+      fileUrl: data.fileUrl ? String(data.fileUrl) : undefined,
+      filePath: data.filePath ? String(data.filePath) : undefined,
+      createdAt: normalizeToNumber(data.createdAt),
+      updatedAt: normalizeToNumber(data.updatedAt),
+    } satisfies Certificate;
+  });
+
+  return certs.sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
 }
 
 export async function getCertificate(uid: string, certificateId: string): Promise<Certificate | null> {
   const snap = await getDoc(doc(firestore, 'users', uid, 'certificates', certificateId));
   if (!snap.exists()) return null;
-  return { id: snap.id, ...(snap.data() as Omit<Certificate, 'id'>) };
+  const data = snap.data() as any;
+  return {
+    id: snap.id,
+    name: String(data.name ?? ''),
+    issueDate: normalizeToISODate(data.issueDate),
+    expiryDate: normalizeToISODate(data.expiryDate),
+    fileUrl: data.fileUrl ? String(data.fileUrl) : undefined,
+    filePath: data.filePath ? String(data.filePath) : undefined,
+    createdAt: normalizeToNumber(data.createdAt),
+    updatedAt: normalizeToNumber(data.updatedAt),
+  };
 }
 
 export async function addCertificate(

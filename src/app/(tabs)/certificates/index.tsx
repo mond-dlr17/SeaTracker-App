@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
@@ -45,6 +45,13 @@ export default function CertificateListRoute() {
       <FlatList
         data={data}
         keyExtractor={(i) => i.id}
+        refreshControl={
+          <RefreshControl
+            refreshing={certsQuery.isFetching}
+            onRefresh={() => certsQuery.refetch()}
+            tintColor={Colors.accent}
+          />
+        }
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.overline}>MARITIME COMMAND</Text>
@@ -105,7 +112,9 @@ export default function CertificateListRoute() {
           certsQuery.isLoading ? (
             <Text style={styles.muted}>Loading…</Text>
           ) : certsQuery.isError ? (
-            <Text style={styles.muted}>Couldn't load certificates.</Text>
+            <Text style={styles.muted}>
+              Couldn't load certificates: {String((certsQuery.error as any)?.message ?? 'Unknown error')}
+            </Text>
           ) : (
             <Card>
               <Text style={styles.title}>No certificates yet</Text>
