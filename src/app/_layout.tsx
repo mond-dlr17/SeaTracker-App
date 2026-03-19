@@ -55,6 +55,14 @@ function AuthGate() {
     >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="upgrade-premium"
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          contentStyle: { backgroundColor: '#F8FAFC' },
+        }}
+      />
     </Stack>
   );
 }
