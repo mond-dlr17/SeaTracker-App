@@ -41,7 +41,7 @@ export function Screen({ children }: PropsWithChildren) {
           styles.content,
           {
             paddingTop: insets.top + Spacing.screenPaddingVertical,
-            paddingBottom: insets.bottom + Spacing.screenPaddingVertical,
+            paddingBottom:Spacing.screenPaddingVertical,
           },
         ]}
       >

@@ -1,12 +1,20 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
 import { useAddCertificate, useCertificates } from '../../../features/certificates/certificatesHooks';
+import {
+  CERTIFICATE_ATTACHMENT_PICKER_TYPES,
+  isAllowedCertificateAttachment,
+  normalizeAttachmentContentType,
+  resolveLocalFileSizeBytes,
+  validateCertificateAttachmentSize,
+} from '../../../features/certificates/certificateAttachments';
 import { removeCertificate, uploadCertificateFile } from '../../../features/certificates/certificatesService';
+import { consumePendingCertificateScan } from '../../../features/documentScan/pendingCertificateScan';
 import { Screen } from '../../../shared/components/Screen';
 import { Card } from '../../../shared/components/Card';
 import { Button } from '../../../shared/components/Button';
@@ -26,6 +34,18 @@ export default function AddCertificateRoute() {
       parent?.setOptions?.({
         tabBarStyle: { display: 'none' },
       });
+
+      const pending = consumePendingCertificateScan();
+      if (pending) {
+        if (pending.name) setName(pending.name);
+        if (pending.issueDate) setIssueDate(pending.issueDate);
+        if (pending.expiryDate) setExpiryDate(pending.expiryDate);
+        setPickedImage({
+          localUri: pending.localUri,
+          filename: pending.filename,
+          contentType: pending.contentType,
+        });
+      }
 
       return () => {
         // Restore tab bar style when leaving this screen.
@@ -80,35 +100,40 @@ export default function AddCertificateRoute() {
 
   const pickImage = async () => {
     const res = await DocumentPicker.getDocumentAsync({
-      type: 'image/*',
+      type: [...CERTIFICATE_ATTACHMENT_PICKER_TYPES],
       copyToCacheDirectory: true,
     });
     if (res.canceled) return;
     const file = res.assets[0];
     if (!file?.uri) return;
 
-    const size = (file as any).size as number | undefined;
-    const maxSizeBytes = 2 * 1024 * 1024;
-    if (typeof size === 'number' && size > maxSizeBytes) {
-      Alert.alert('Image too large', 'Please choose an image up to 2MB.');
+    const pickerSize = (file as { size?: number }).size;
+    const sizeBytes = await resolveLocalFileSizeBytes(file.uri, pickerSize);
+    if (sizeBytes == null) {
+      Alert.alert(
+        'Couldn’t read file size',
+        'Try saving the file to your device or pick another file.',
+      );
+      return;
+    }
+    const sizeErr = validateCertificateAttachmentSize(sizeBytes);
+    if (sizeErr) {
+      Alert.alert('File too large', sizeErr);
       return;
     }
 
     const mimeType = file.mimeType ?? '';
-    const ext = mimeType.includes('png')
-      ? 'png'
-      : mimeType.includes('jpeg') || mimeType.includes('jpg')
-        ? 'jpg'
-        : mimeType.includes('webp')
-          ? 'webp'
-          : mimeType.includes('gif')
-            ? 'gif'
-            : 'png';
-    const filename = file.name ?? `certificate-image.${ext}`;
+    const filename = file.name ?? 'attachment';
+    if (!isAllowedCertificateAttachment(mimeType, filename)) {
+      Alert.alert('Unsupported file', 'Only PDF, PNG, JPG, JPEG, and HEIC files are allowed.');
+      return;
+    }
+
+    const contentType = normalizeAttachmentContentType(mimeType, filename);
     setPickedImage({
       localUri: file.uri,
       filename,
-      contentType: mimeType || undefined,
+      contentType,
     });
   };
 
@@ -151,17 +176,36 @@ export default function AddCertificateRoute() {
               />
             </View>
           </View>
+          {Platform.OS !== 'web' ? (
+            <Button
+              title="Scan with camera"
+              variant="secondary"
+              onPress={() => router.push('/(tabs)/certificates/scan')}
+              disabled={blocked}
+            />
+          ) : null}
           <Pressable onPress={pickImage} style={styles.uploadZone}>
             {pickedImage ? (
               <View style={styles.previewInner}>
-                <Image source={{ uri: pickedImage.localUri }} style={styles.previewImage} />
+                {pickedImage.contentType?.includes('pdf') ? (
+                  <View style={styles.pdfPreview}>
+                    <Text style={styles.pdfPreviewText} numberOfLines={2}>
+                      {pickedImage.filename}
+                    </Text>
+                    <Text style={styles.pdfPreviewHint}>PDF (preview after save)</Text>
+                  </View>
+                ) : (
+                  <Image source={{ uri: pickedImage.localUri }} style={styles.previewImage} />
+                )}
                 <Text style={styles.previewText} numberOfLines={1}>
                   {pickedImage.filename}
                 </Text>
                 <Text style={styles.previewHint}>Tap to replace</Text>
               </View>
             ) : (
-              <Text style={styles.uploadText}>Scan or upload an image (PNG, JPG, or WEBP up to 10MB)</Text>
+              <Text style={styles.uploadText}>
+                Scan or upload a file (PDF, PNG, JPG, JPEG, or HEIC — up to 3MB)
+              </Text>
             )}
           </Pressable>
           <Button
@@ -183,12 +227,14 @@ export default function AddCertificateRoute() {
                     if (pickedImage) {
                       setImageUploading(true);
                       try {
+                        const sizeBytes = await resolveLocalFileSizeBytes(pickedImage.localUri);
                         await uploadCertificateFile({
                           uid,
                           certificateId,
                           localUri: pickedImage.localUri,
                           filename: pickedImage.filename,
                           contentType: pickedImage.contentType,
+                          sizeBytes: sizeBytes ?? undefined,
                         });
                       } catch (e) {
                         // Best-effort cleanup so users don't end up with an orphan cert without photo.
@@ -285,6 +331,27 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 8,
     backgroundColor: Colors.surface2,
+  },
+  pdfPreview: {
+    width: '100%',
+    minHeight: 90,
+    borderRadius: 8,
+    backgroundColor: Colors.surface2,
+    padding: Spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  pdfPreviewText: {
+    color: Colors.text,
+    fontSize: Typography.bodySize,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  pdfPreviewHint: {
+    color: Colors.muted,
+    fontSize: Typography.labelSize,
+    fontWeight: '600',
   },
   previewText: {
     color: Colors.text,

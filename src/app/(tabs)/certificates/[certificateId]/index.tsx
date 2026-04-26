@@ -1,30 +1,39 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import dayjs from 'dayjs';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
-import { useAuth } from '../../../features/auth/AuthProvider';
+import { useAuth } from '../../../../features/auth/AuthProvider';
+import {
+  attachmentKindFromMime,
+  CERTIFICATE_ATTACHMENT_PICKER_TYPES,
+  firstImageAttachmentUrl,
+  isAllowedCertificateAttachment,
+  listCertificateAttachments,
+  normalizeAttachmentContentType,
+  resolveLocalFileSizeBytes,
+  validateCertificateAttachmentSize,
+} from '../../../../features/certificates/certificateAttachments';
 import {
   useCertificate,
+  useRemoveCertificateAttachment,
   useUpdateCertificate,
   useUploadCertificateFile,
   useRemoveCertificate,
-} from '../../../features/certificates/certificatesHooks';
-import { getCertificateIoniconsName } from '../../../features/certificates/certificateIcons';
-import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
-import { Screen } from '../../../shared/components/Screen';
-import { Card } from '../../../shared/components/Card';
-import { Button } from '../../../shared/components/Button';
-import { TextField } from '../../../shared/components/TextField';
-import { storage } from '../../../shared/services/firebase';
-import { Colors } from '../../../shared/utils/colors';
-import { formatDate } from '../../../shared/utils/formatDate';
-import { Spacing, Typography } from '../../../shared/utils/theme';
+} from '../../../../features/certificates/certificatesHooks';
+import { getCertificateIoniconsName } from '../../../../features/certificates/certificateIcons';
+import { getCertificateStatus } from '../../../../features/certificates/certificateStatus';
+import { Screen } from '../../../../shared/components/Screen';
+import { Card } from '../../../../shared/components/Card';
+import { Button } from '../../../../shared/components/Button';
+import { TextField } from '../../../../shared/components/TextField';
+import { Colors } from '../../../../shared/utils/colors';
+import { formatDate } from '../../../../shared/utils/formatDate';
+import { Spacing, Typography } from '../../../../shared/utils/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { isValidISODate } from '../../../shared/utils/validation';
-import { deleteObject, ref } from 'firebase/storage';
+import { isValidISODate } from '../../../../shared/utils/validation';
 
 function RenewalTimeline({
   issueDate,
@@ -110,6 +119,7 @@ export default function EditCertificateRoute() {
   const certQuery = useCertificate(uid, certificateId);
   const updateMut = useUpdateCertificate(uid, certificateId);
   const uploadMut = useUploadCertificateFile(uid, certificateId);
+  const removeAttachmentMut = useRemoveCertificateAttachment(uid, certificateId);
   const removeMut = useRemoveCertificate(uid);
 
   const cert = certQuery.data ?? null;
@@ -126,12 +136,9 @@ export default function EditCertificateRoute() {
     setExpiryDate(cert.expiryDate);
   }, [cert?.id]);
 
-  const imageUri = useMemo(() => {
-    if (!cert?.fileUrl) return undefined;
-    const candidate = cert.filePath ?? cert.fileUrl;
-    const isImage = /\.(png|jpe?g|webp|gif)$/i.test(candidate);
-    return isImage ? cert.fileUrl : undefined;
-  }, [cert?.filePath, cert?.fileUrl]);
+  const imageUri = useMemo(() => (cert ? firstImageAttachmentUrl(cert) : undefined), [cert]);
+
+  const attachments = useMemo(() => (cert ? listCertificateAttachments(cert) : []), [cert]);
 
   if (!uid) return null;
 
@@ -179,7 +186,17 @@ export default function EditCertificateRoute() {
           </Pressable>
         </View>
 
-        <View style={styles.hero}>
+        <Pressable
+          style={styles.hero}
+          disabled={!imageUri}
+          onPress={() => {
+            if (!imageUri || !cert) return;
+            const match = attachments.find((a) => a.url === imageUri);
+            if (match) {
+              router.push(`/(tabs)/certificates/${certificateId}/attachment/${match.id}`);
+            }
+          }}
+        >
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.heroImage} resizeMode="cover" />
           ) : (
@@ -188,7 +205,7 @@ export default function EditCertificateRoute() {
               <Text style={styles.heroPlaceholderText}>No image attached</Text>
             </View>
           )}
-        </View>
+        </Pressable>
 
         <View style={styles.section}>
           <Text style={styles.certTitle}>{cert.name}</Text>
@@ -225,7 +242,7 @@ export default function EditCertificateRoute() {
             <Button
               title={removeMut.isPending ? 'Deleting…' : 'Delete'}
               variant="danger"
-              disabled={updateMut.isPending || uploadMut.isPending}
+              disabled={updateMut.isPending || uploadMut.isPending || removeAttachmentMut.isPending}
               loading={removeMut.isPending}
               onPress={() => {
                 Alert.alert('Delete certificate?', 'This cannot be undone.', [
@@ -234,16 +251,6 @@ export default function EditCertificateRoute() {
                     text: 'Delete',
                     style: 'destructive',
                     onPress: async () => {
-                      try {
-                        // Best-effort storage cleanup; if it fails we still delete the DB record.
-                        if (cert?.filePath) {
-                          await deleteObject(ref(storage, cert.filePath));
-                        }
-                      } catch {
-                        // eslint-disable-next-line no-console
-                        console.warn('Storage delete failed; continuing with Firestore delete.');
-                      }
-
                       removeMut.mutate(certificateId, {
                         onSuccess: () => {
                           router.replace('/(tabs)/certificates');
@@ -271,58 +278,106 @@ export default function EditCertificateRoute() {
         <View style={styles.gap} />
 
         <Card style={styles.card}>
-          <Text style={styles.sectionLabel}>Attachment</Text>
-          {cert.fileUrl ? (
-            <View style={styles.row}>
-              <Text style={styles.meta} numberOfLines={1}>
-                File uploaded
-              </Text>
-              <Button
-                title="Open"
-                variant="secondary"
-                onPress={() => Linking.openURL(cert.fileUrl!)}
-                style={styles.openBtn}
-              />
-            </View>
+          <Text style={styles.sectionLabel}>Attachments</Text>
+          <Text style={styles.attachmentHint}>
+            PDF, PNG, JPG, JPEG, or HEIC — up to 3MB each. You can add multiple files.
+          </Text>
+          {attachments.length === 0 ? (
+            <Text style={styles.meta}>No files uploaded yet.</Text>
           ) : (
-            <Text style={styles.meta}>No file uploaded yet.</Text>
+            attachments.map((a) => {
+              const kind = attachmentKindFromMime(a.contentType, a.filename);
+              const iconName =
+                kind === 'pdf'
+                  ? 'document-text-outline'
+                  : kind === 'image'
+                    ? 'image-outline'
+                    : 'attach-outline';
+              return (
+                <View key={a.id} style={styles.attachmentRow}>
+                  <Pressable
+                    style={styles.attachmentMain}
+                    onPress={() =>
+                      router.push(`/(tabs)/certificates/${certificateId}/attachment/${a.id}`)
+                    }
+                  >
+                    <Ionicons name={iconName} size={22} color={Colors.accent} />
+                    <Text style={styles.attachmentName} numberOfLines={1}>
+                      {a.filename}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={18} color={Colors.muted} />
+                  </Pressable>
+                  {editing ? (
+                    <Pressable
+                      hitSlop={10}
+                      onPress={() => {
+                        Alert.alert('Remove attachment?', `Remove “${a.filename}”?`, [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Remove',
+                            style: 'destructive',
+                            onPress: () =>
+                              removeAttachmentMut.mutate(a.id, {
+                                onError: () => Alert.alert("Couldn't remove file", 'Please try again.'),
+                              }),
+                          },
+                        ]);
+                      }}
+                      style={styles.attachmentRemove}
+                    >
+                      <Ionicons name="trash-outline" size={20} color={Colors.expired} />
+                    </Pressable>
+                  ) : null}
+                </View>
+              );
+            })
           )}
           <Button
-            title="Upload file"
+            title="Add file"
             variant="secondary"
             loading={uploadMut.isPending}
+            disabled={removeAttachmentMut.isPending}
             onPress={async () => {
               const res = await DocumentPicker.getDocumentAsync({
-                type: '*/*',
+                type: [...CERTIFICATE_ATTACHMENT_PICKER_TYPES],
                 copyToCacheDirectory: true,
               });
               if (res.canceled) return;
               const file = res.assets[0];
               if (!file?.uri) return;
 
-              const size = (file as any).size as number | undefined;
-              const maxSizeBytes = 2 * 1024 * 1024;
-              if (typeof size === 'number' && size > maxSizeBytes) {
-                Alert.alert('Image too large', 'Please choose an image up to 2MB.');
+              const pickerSize = (file as { size?: number }).size;
+              const sizeBytes = await resolveLocalFileSizeBytes(file.uri, pickerSize);
+              if (sizeBytes == null) {
+                Alert.alert(
+                  'Couldn’t read file size',
+                  'Try saving the file to your device or pick another file.',
+                );
+                return;
+              }
+              const sizeErr = validateCertificateAttachmentSize(sizeBytes);
+              if (sizeErr) {
+                Alert.alert('File too large', sizeErr);
                 return;
               }
 
               const mimeType = file.mimeType ?? '';
-              const ext = mimeType.includes('png')
-                ? 'png'
-                : mimeType.includes('jpeg') || mimeType.includes('jpg')
-                  ? 'jpg'
-                  : mimeType.includes('webp')
-                    ? 'webp'
-                    : mimeType.includes('gif')
-                      ? 'gif'
-                      : '';
-              const filename = file.name ?? `certificate${ext ? `.${ext}` : ''}`;
+              const filename = file.name ?? 'attachment';
+              if (!isAllowedCertificateAttachment(mimeType, filename)) {
+                Alert.alert(
+                  'Unsupported file',
+                  'Only PDF, PNG, JPG, JPEG, and HEIC files are allowed.',
+                );
+                return;
+              }
+
+              const contentType = normalizeAttachmentContentType(mimeType, filename);
               uploadMut.mutate(
                 {
                   localUri: file.uri,
                   filename,
-                  contentType: mimeType || undefined,
+                  contentType,
+                  sizeBytes,
                 },
                 { onError: () => Alert.alert('Upload failed', 'Please try again.') },
               );
@@ -446,7 +501,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.md,
   },
-  openBtn: { width: 110 },
+  attachmentHint: {
+    color: Colors.muted,
+    fontSize: Typography.labelSize,
+    fontWeight: '600',
+    marginBottom: Spacing.sm,
+  },
+  attachmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+  },
+  attachmentMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    minWidth: 0,
+    paddingVertical: Spacing.xs,
+  },
+  attachmentName: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: Typography.bodySize,
+    fontWeight: '700',
+  },
+  attachmentRemove: {
+    padding: Spacing.sm,
+  },
   primaryBtn: { marginBottom: Spacing.sm },
   secondaryBtn: { marginBottom: Spacing.sm },
   gap: { height: Spacing.itemGap },

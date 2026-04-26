@@ -6,6 +6,7 @@ import {
   getCertificate,
   listCertificates,
   removeCertificate,
+  removeCertificateAttachment,
   updateCertificate,
   uploadCertificateFile,
   seedSampleCertificates,
@@ -48,8 +49,11 @@ export function useAddCertificate(uid: string) {
 export function useUpdateCertificate(uid: string, certificateId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: Partial<Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'fileUrl' | 'filePath'>>) =>
-      updateCertificate(uid, certificateId, patch),
+    mutationFn: (
+      patch: Partial<
+        Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'fileUrl' | 'filePath' | 'attachments'>
+      >,
+    ) => updateCertificate(uid, certificateId, patch),
     onSuccess: async () => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: certificatesKey(uid) }),
@@ -72,8 +76,21 @@ export function useRemoveCertificate(uid: string) {
 export function useUploadCertificateFile(uid: string, certificateId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: { localUri: string; filename: string; contentType?: string }) =>
+    mutationFn: (p: { localUri: string; filename: string; contentType?: string; sizeBytes?: number }) =>
       uploadCertificateFile({ uid, certificateId, ...p }),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: certificatesKey(uid) }),
+        qc.invalidateQueries({ queryKey: certificateKey(uid, certificateId) }),
+      ]);
+    },
+  });
+}
+
+export function useRemoveCertificateAttachment(uid: string, certificateId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (attachmentId: string) => removeCertificateAttachment(uid, certificateId, attachmentId),
     onSuccess: async () => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: certificatesKey(uid) }),

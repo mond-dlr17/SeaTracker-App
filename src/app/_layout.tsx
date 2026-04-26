@@ -1,5 +1,5 @@
 // Must load first so Reactotron connects before other app code
-if (__DEV__) {
+if (__DEV__ && Platform.OS !== 'web') {
   require('../../ReactotronConfig');
 }
 
@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 
 import { AppProviders } from '../core/providers/AppProviders';
 import { useAuth } from '../features/auth/AuthProvider';

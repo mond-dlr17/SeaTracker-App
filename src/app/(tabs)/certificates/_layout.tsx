@@ -14,7 +14,8 @@ export default function CertificatesStackLayout() {
     >
       <Stack.Screen name="index" options={{ title: 'Certificates' }} />
       <Stack.Screen name="add" options={{ title: 'Add certificate' }} />
-      <Stack.Screen name="[certificateId]" options={{ title: 'Edit certificate' }} />
+      <Stack.Screen name="scan" options={{ title: 'Scan document' }} />
+      <Stack.Screen name="[certificateId]" options={{ title: 'Certificate' }} />
     </Stack>
   );
 }

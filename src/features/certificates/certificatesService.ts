@@ -1,17 +1,24 @@
 import dayjs from 'dayjs';
+import * as Crypto from 'expo-crypto';
 import * as FileSystem from 'expo-file-system/legacy';
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
-import type { Certificate } from '../../domain/models/Certificate';
+import type { Certificate, CertificateAttachment } from '../../domain/models/Certificate';
+import {
+  LEGACY_CERTIFICATE_ATTACHMENT_ID,
+  listCertificateAttachments,
+  parseStoredAttachments,
+} from './certificateAttachments';
 import { firestore, storage } from '../../shared/services/firebase';
 
 function certsCollection(uid: string) {
@@ -93,11 +100,13 @@ export async function listCertificates(uid: string): Promise<Certificate[]> {
   const snap = await getDocs(certsCollection(uid));
   const certs = snap.docs.map((d) => {
     const data = d.data() as any;
+    const attachments = parseStoredAttachments(data.attachments);
     return {
       id: d.id,
       name: String(data.name ?? ''),
       issueDate: normalizeToISODate(data.issueDate),
       expiryDate: normalizeToISODate(data.expiryDate),
+      attachments: attachments.length ? attachments : undefined,
       fileUrl: data.fileUrl ? String(data.fileUrl) : undefined,
       filePath: data.filePath ? String(data.filePath) : undefined,
       createdAt: normalizeToNumber(data.createdAt),
@@ -113,11 +122,13 @@ export async function getCertificate(uid: string, certificateId: string): Promis
   const snap = await getDoc(doc(firestore, 'users', uid, 'certificates', certificateId));
   if (!snap.exists()) return null;
   const data = snap.data() as any;
+  const attachments = parseStoredAttachments(data.attachments);
   return {
     id: snap.id,
     name: String(data.name ?? ''),
     issueDate: normalizeToISODate(data.issueDate),
     expiryDate: normalizeToISODate(data.expiryDate),
+    attachments: attachments.length ? attachments : undefined,
     fileUrl: data.fileUrl ? String(data.fileUrl) : undefined,
     filePath: data.filePath ? String(data.filePath) : undefined,
     createdAt: normalizeToNumber(data.createdAt),
@@ -145,31 +156,111 @@ export async function addCertificate(
 export async function updateCertificate(
   uid: string,
   certificateId: string,
-  patch: Partial<Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'filePath' | 'fileUrl'>>,
+  patch: Partial<Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'filePath' | 'fileUrl' | 'attachments'>>,
 ) {
   await updateDoc(doc(firestore, 'users', uid, 'certificates', certificateId), { ...patch, updatedAt: Date.now() });
 }
 
 export async function removeCertificate(uid: string, certificateId: string) {
+  const cert = await getCertificate(uid, certificateId);
+  if (cert) {
+    for (const a of listCertificateAttachments(cert)) {
+      try {
+        await deleteObject(ref(storage, a.storagePath));
+      } catch {
+        // eslint-disable-next-line no-console
+        console.warn('Storage delete failed for attachment', a.storagePath);
+      }
+    }
+  }
   await deleteDoc(doc(firestore, 'users', uid, 'certificates', certificateId));
 }
 
+export async function uploadCertificateAttachment(params: {
+  uid: string;
+  certificateId: string;
+  localUri: string;
+  filename: string;
+  contentType?: string;
+  sizeBytes?: number;
+}): Promise<CertificateAttachment> {
+  const blob = await uriToBlob(params.localUri);
+  const id = Crypto.randomUUID();
+  const safeBase = params.filename.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 120) || 'file';
+  const storagePath = `users/${params.uid}/certificates/${params.certificateId}/attachments/${id}-${safeBase}`;
+  const storageRef = ref(storage, storagePath);
+
+  await uploadBytes(storageRef, blob, params.contentType ? { contentType: params.contentType } : undefined);
+  const url = await getDownloadURL(storageRef);
+
+  const cert = await getCertificate(params.uid, params.certificateId);
+  if (!cert) throw new Error('Certificate not found');
+
+  const nextAttachments = [...(cert.attachments ?? [])];
+  const attachment: CertificateAttachment = {
+    id,
+    url,
+    storagePath,
+    filename: params.filename,
+    contentType: params.contentType,
+    sizeBytes: params.sizeBytes,
+  };
+  nextAttachments.push(attachment);
+
+  await updateCertificate(params.uid, params.certificateId, { attachments: nextAttachments });
+  return attachment;
+}
+
+/** @deprecated Use `uploadCertificateAttachment` — kept for call sites that still use this name. */
 export async function uploadCertificateFile(params: {
   uid: string;
   certificateId: string;
   localUri: string;
   filename: string;
   contentType?: string;
+  sizeBytes?: number;
 }) {
-  const blob = await uriToBlob(params.localUri);
-  const path = `users/${params.uid}/certificates/${params.certificateId}/${params.filename}`;
-  const storageRef = ref(storage, path);
+  return uploadCertificateAttachment(params);
+}
 
-  await uploadBytes(storageRef, blob, params.contentType ? { contentType: params.contentType } : undefined);
-  const url = await getDownloadURL(storageRef);
+export async function removeCertificateAttachment(uid: string, certificateId: string, attachmentId: string) {
+  const cert = await getCertificate(uid, certificateId);
+  if (!cert) return;
 
-  await updateCertificate(params.uid, params.certificateId, { filePath: path, fileUrl: url });
-  return { path, url };
+  const docRef = doc(firestore, 'users', uid, 'certificates', certificateId);
+
+  if (attachmentId === LEGACY_CERTIFICATE_ATTACHMENT_ID) {
+    if (cert.filePath) {
+      try {
+        await deleteObject(ref(storage, cert.filePath));
+      } catch {
+        // eslint-disable-next-line no-console
+        console.warn('Storage delete failed for legacy attachment', cert.filePath);
+      }
+    }
+    await updateDoc(docRef, {
+      fileUrl: deleteField(),
+      filePath: deleteField(),
+      updatedAt: Date.now(),
+    });
+    return;
+  }
+
+  const att = cert.attachments?.find((a) => a.id === attachmentId);
+  if (att?.storagePath) {
+    try {
+      await deleteObject(ref(storage, att.storagePath));
+    } catch {
+      // eslint-disable-next-line no-console
+      console.warn('Storage delete failed for attachment', att.storagePath);
+    }
+  }
+
+  const remaining = (cert.attachments ?? []).filter((a) => a.id !== attachmentId);
+  await updateDoc(docRef, {
+    attachments: remaining.length ? remaining : deleteField(),
+    updatedAt: Date.now(),
+  });
 }
 
 export async function seedSampleCertificates(uid: string): Promise<void> {
@@ -200,7 +291,7 @@ export async function seedSampleCertificates(uid: string): Promise<void> {
   // Append 3 sample certificates.
   for (const sample of samples) {
     const certificateId = await addCertificate(uid, sample);
-    await uploadCertificateFile({
+    await uploadCertificateAttachment({
       uid,
       certificateId,
       localUri: image.localUri,
