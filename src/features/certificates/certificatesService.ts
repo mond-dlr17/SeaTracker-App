@@ -114,6 +114,7 @@ export async function listCertificates(uid: string): Promise<Certificate[]> {
     return {
       id: d.id,
       name: String(data.name ?? ''),
+      issuer: data.issuer ? String(data.issuer) : undefined,
       issueDate: normalizeToISODate(data.issueDate),
       expiryDate: normalizeToISODate(data.expiryDate),
       attachments: attachments.length ? attachments : undefined,
@@ -136,6 +137,7 @@ export async function getCertificate(uid: string, certificateId: string): Promis
   return {
     id: snap.id,
     name: String(data.name ?? ''),
+    issuer: data.issuer ? String(data.issuer) : undefined,
     issueDate: normalizeToISODate(data.issueDate),
     expiryDate: normalizeToISODate(data.expiryDate),
     attachments: attachments.length ? attachments : undefined,
@@ -148,17 +150,18 @@ export async function getCertificate(uid: string, certificateId: string): Promis
 
 export async function addCertificate(
   uid: string,
-  input: Pick<Certificate, 'name' | 'issueDate' | 'expiryDate'>,
+  input: Pick<Certificate, 'name' | 'issueDate' | 'expiryDate'> & { issuer?: string },
 ): Promise<string> {
   const id = doc(certsCollection(uid)).id;
   const now = Date.now();
-  const cert: Omit<Certificate, 'id'> = {
+  const cert: Record<string, unknown> = {
     name: input.name.trim(),
     issueDate: input.issueDate,
     expiryDate: input.expiryDate,
     createdAt: now,
     updatedAt: now,
   };
+  if (input.issuer?.trim()) cert.issuer = input.issuer.trim();
   await setDoc(doc(firestore, 'users', uid, 'certificates', id), cert);
   return id;
 }
@@ -167,7 +170,7 @@ export async function updateCertificate(
   uid: string,
   certificateId: string,
   patch: Partial<
-    Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'filePath' | 'fileUrl' | 'attachments'>
+    Pick<Certificate, 'name' | 'issuer' | 'issueDate' | 'expiryDate' | 'filePath' | 'fileUrl' | 'attachments'>
   >,
 ) {
   await updateDoc(doc(firestore, 'users', uid, 'certificates', certificateId), {

@@ -13,6 +13,7 @@ export type CertificateAttachment = {
 export type Certificate = {
   id: string;
   name: string;
+  issuer?: string;
   issueDate: string; // YYYY-MM-DD
   expiryDate: string; // YYYY-MM-DD
   /** New multi-attachment model */

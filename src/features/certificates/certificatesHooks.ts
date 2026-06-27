@@ -39,7 +39,8 @@ export function useCertificate(uid: string, certificateId: string) {
 export function useAddCertificate(uid: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: Pick<Certificate, 'name' | 'issueDate' | 'expiryDate'>) => addCertificate(uid, input),
+    mutationFn: (input: Pick<Certificate, 'name' | 'issueDate' | 'expiryDate'> & { issuer?: string }) =>
+      addCertificate(uid, input),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: certificatesKey(uid) });
     },
@@ -51,7 +52,7 @@ export function useUpdateCertificate(uid: string, certificateId: string) {
   return useMutation({
     mutationFn: (
       patch: Partial<
-        Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'fileUrl' | 'filePath' | 'attachments'>
+        Pick<Certificate, 'name' | 'issuer' | 'issueDate' | 'expiryDate' | 'fileUrl' | 'filePath' | 'attachments'>
       >,
     ) => updateCertificate(uid, certificateId, patch),
     onSuccess: async () => {

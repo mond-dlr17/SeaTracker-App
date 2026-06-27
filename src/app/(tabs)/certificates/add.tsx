@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -16,6 +17,7 @@ import { router } from 'expo-router';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
+import dayjs from 'dayjs';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useAddCertificate, useCertificates } from '@/features/certificates/certificatesHooks';
@@ -28,6 +30,7 @@ import {
 } from '@/features/certificates/certificateAttachments';
 import { removeCertificate, uploadCertificateFile } from '@/features/certificates/certificatesService';
 import { CERT_ICONS, getCertificateIoniconsName } from '@/features/certificates/certificateIcons';
+import { getCertificateStatus } from '@/features/certificates/certificateStatus';
 import { consumePendingCertificateScan } from '@/features/documentScan/pendingCertificateScan';
 import { Screen } from '@/shared/components/Screen';
 import { Button } from '@/shared/components/Button';
@@ -49,6 +52,58 @@ type FormErrors = {
 
 const CERT_SUGGESTIONS = Object.keys(CERT_ICONS);
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getExpiryLabel(expiryDate: string): string | null {
+  if (!isValidISODate(expiryDate)) return null;
+  const days = dayjs(expiryDate).startOf('day').diff(dayjs().startOf('day'), 'day');
+  if (days < 0) return `Expired ${Math.abs(days)}d ago`;
+  if (days === 0) return 'Expires today';
+  if (days < 31) return `Expires in ${days}d`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `Expires in ${months}mo`;
+  const years = (days / 365).toFixed(1).replace('.0', '');
+  return `Expires in ${years}yr`;
+}
+
+function getValidityLabel(issueDate: string, expiryDate: string): string | null {
+  if (!isValidISODate(issueDate) || !isValidISODate(expiryDate)) return null;
+  const months = dayjs(expiryDate).diff(dayjs(issueDate), 'month');
+  if (months <= 0) return null;
+  if (months < 12) return `${months}mo validity`;
+  const years = (months / 12).toFixed(1).replace('.0', '');
+  return `${years}yr validity`;
+}
+
+// ─── StatusBadge ──────────────────────────────────────────────────────────────
+
+function StatusBadge({ expiryDate }: { expiryDate: string }) {
+  if (!isValidISODate(expiryDate)) return null;
+  const status = getCertificateStatus(expiryDate);
+  const label = getExpiryLabel(expiryDate);
+  const color = status === 'valid' ? Colors.valid : status === 'warning' ? Colors.warning : Colors.expired;
+  return (
+    <View style={[badgeStyles.wrap, { backgroundColor: color + '22', borderColor: color + '55' }]}>
+      <View style={[badgeStyles.dot, { backgroundColor: color }]} />
+      <Text style={[badgeStyles.text, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
+const badgeStyles = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  text: { fontSize: 11, fontWeight: '700' },
+});
+
 // ─── DateField ────────────────────────────────────────────────────────────────
 
 function DateField({
@@ -64,9 +119,7 @@ function DateField({
 }) {
   const [focused, setFocused] = useState(false);
 
-  // Auto-insert dashes as user types (YYYY-MM-DD)
   const handleChange = (raw: string) => {
-    // Strip non-digits
     const digits = raw.replace(/\D/g, '').slice(0, 8);
     let formatted = digits;
     if (digits.length > 4) formatted = digits.slice(0, 4) + '-' + digits.slice(4);
@@ -134,9 +187,7 @@ const dateStyles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  inputRowError: {
-    borderColor: Colors.expired,
-  },
+  inputRowError: { borderColor: Colors.expired },
   icon: { marginTop: 1 },
   input: {
     flex: 1,
@@ -203,7 +254,6 @@ function NameField({
       </View>
       {!!error && <Text style={nameStyles.errorText}>{error}</Text>}
 
-      {/* Inline suggestion chips */}
       {focused && filtered.length > 0 && (
         <ScrollView
           horizontal
@@ -223,7 +273,6 @@ function NameField({
         </ScrollView>
       )}
 
-      {/* Full picker modal */}
       <Modal
         visible={showPicker}
         transparent
@@ -411,50 +460,130 @@ const pickerStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  gridIconSelected: {
-    backgroundColor: Colors.accent,
-  },
+  gridIconSelected: { backgroundColor: Colors.accent },
   gridLabel: {
     color: Colors.muted,
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },
-  gridLabelSelected: {
-    color: Colors.accent,
+  gridLabelSelected: { color: Colors.accent },
+  closeRow: { paddingTop: Spacing.sm },
+});
+
+// ─── IssuerField ──────────────────────────────────────────────────────────────
+
+function IssuerField({ value, onChangeText }: { value: string; onChangeText: (v: string) => void }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <View style={issuerStyles.wrap}>
+      <Text style={issuerStyles.label}>ISSUING AUTHORITY</Text>
+      <View style={[issuerStyles.inputRow, focused && issuerStyles.inputRowFocused]}>
+        <Ionicons
+          name="business-outline"
+          size={18}
+          color={focused ? Colors.accent : Colors.muted}
+          style={{ marginTop: 1 }}
+        />
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder="e.g. Maritime Authority of Country"
+          placeholderTextColor={Colors.muted}
+          style={issuerStyles.input}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          autoCorrect={false}
+        />
+      </View>
+      <Text style={issuerStyles.hint}>Optional — the organisation that issued this certificate</Text>
+    </View>
+  );
+}
+
+const issuerStyles = StyleSheet.create({
+  wrap: { gap: Spacing.fieldGap },
+  label: {
+    color: Colors.primary,
+    fontWeight: Typography.labelWeight,
+    fontSize: 12,
+    letterSpacing: 0.6,
   },
-  closeRow: {
-    paddingTop: Spacing.sm,
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderRadius: Radius.button,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+  },
+  inputRowFocused: {
+    borderColor: Colors.accent,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  input: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  hint: {
+    color: Colors.muted,
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 2,
   },
 });
 
 // ─── UploadZone ────────────────────────────────────────────────────────────────
 
-function UploadZone({ file, onPress }: { file: PickedFile | null; onPress: () => void }) {
+function UploadZone({
+  file,
+  onPress,
+  onRemove,
+}: {
+  file: PickedFile | null;
+  onPress: () => void;
+  onRemove: () => void;
+}) {
   if (file) {
     return (
-      <Pressable onPress={onPress} style={uploadStyles.zone}>
-        {file.contentType?.includes('pdf') ? (
-          <View style={uploadStyles.pdfPreview}>
-            <Ionicons name="document-text" size={32} color={Colors.accent} />
-            <Text style={uploadStyles.pdfName} numberOfLines={2}>
-              {file.filename}
-            </Text>
-            <Text style={uploadStyles.pdfHint}>PDF — tap to replace</Text>
-          </View>
-        ) : (
-          <View style={uploadStyles.imagePreview}>
-            <Image source={{ uri: file.localUri }} style={uploadStyles.previewImg} />
-            <View style={uploadStyles.imageOverlay}>
-              <Ionicons name="camera-reverse-outline" size={18} color={Colors.surface} />
-              <Text style={uploadStyles.imageOverlayText}>Tap to replace</Text>
+      <View style={uploadStyles.zoneWrapper}>
+        <Pressable onPress={onPress} style={uploadStyles.zone}>
+          {file.contentType?.includes('pdf') ? (
+            <View style={uploadStyles.pdfPreview}>
+              <Ionicons name="document-text" size={32} color={Colors.accent} />
+              <Text style={uploadStyles.pdfName} numberOfLines={2}>
+                {file.filename}
+              </Text>
+              <Text style={uploadStyles.pdfHint}>PDF — tap to replace</Text>
             </View>
-          </View>
-        )}
-        <Text style={uploadStyles.filenamePill} numberOfLines={1}>
-          {file.filename}
-        </Text>
-      </Pressable>
+          ) : (
+            <View style={uploadStyles.imagePreview}>
+              <Image source={{ uri: file.localUri }} style={uploadStyles.previewImg} />
+              <View style={uploadStyles.imageOverlay}>
+                <Ionicons name="camera-reverse-outline" size={18} color={Colors.surface} />
+                <Text style={uploadStyles.imageOverlayText}>Tap to replace</Text>
+              </View>
+            </View>
+          )}
+          <Text style={uploadStyles.filenamePill} numberOfLines={1}>
+            {file.filename}
+          </Text>
+        </Pressable>
+
+        {/* Remove button */}
+        <Pressable onPress={onRemove} style={uploadStyles.removeBtn} hitSlop={8}>
+          <Ionicons name="close-circle" size={22} color={Colors.expired} />
+        </Pressable>
+      </View>
     );
   }
 
@@ -470,6 +599,7 @@ function UploadZone({ file, onPress }: { file: PickedFile | null; onPress: () =>
 }
 
 const uploadStyles = StyleSheet.create({
+  zoneWrapper: { position: 'relative' },
   zone: {
     borderWidth: 1.5,
     borderStyle: 'dashed',
@@ -562,6 +692,13 @@ const uploadStyles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     maxWidth: '90%',
   },
+  removeBtn: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: Colors.surface,
+    borderRadius: 11,
+  },
 });
 
 // ─── Main screen ───────────────────────────────────────────────────────────────
@@ -575,6 +712,7 @@ export default function AddCertificateRoute() {
   const addMut = useAddCertificate(uid);
 
   const [name, setName] = useState('');
+  const [issuer, setIssuer] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [pickedFile, setPickedFile] = useState<PickedFile | null>(null);
@@ -632,7 +770,7 @@ export default function AddCertificateRoute() {
     const pickerSize = (file as { size?: number }).size;
     const sizeBytes = await resolveLocalFileSizeBytes(file.uri, pickerSize);
     if (sizeBytes == null) {
-      Alert.alert('Couldn’t read file size', 'Try saving the file to your device or pick another file.');
+      Alert.alert("Couldn't read file size", 'Try saving the file to your device or pick another file.');
       return;
     }
     const sizeErr = validateCertificateAttachmentSize(sizeBytes);
@@ -671,7 +809,7 @@ export default function AddCertificateRoute() {
     if (!validate()) return;
 
     addMut.mutate(
-      { name, issueDate, expiryDate },
+      { name, issuer: issuer || undefined, issueDate, expiryDate },
       {
         onSuccess: async (certificateId) => {
           if (pickedFile) {
@@ -687,13 +825,10 @@ export default function AddCertificateRoute() {
                 sizeBytes: sizeBytes ?? undefined,
               });
             } catch (e) {
-              // Best-effort cleanup so users don't end up with an orphan cert without a file.
-              // eslint-disable-next-line no-console
               console.error('uploadCertificateFile failed:', e);
               try {
                 await removeCertificate(uid, certificateId);
               } catch {
-                // eslint-disable-next-line no-console
                 console.warn('removeCertificate cleanup failed; keeping orphan cert.', e);
               }
               Alert.alert(
@@ -708,8 +843,6 @@ export default function AddCertificateRoute() {
           router.replace(`/(tabs)/certificates/${certificateId}`);
         },
         onError: (e) => {
-          // Helpful for debugging permission/rules errors.
-          // eslint-disable-next-line no-console
           console.error('addCertificate failed:', e);
           Alert.alert("Couldn't save certificate", String((e as any)?.message ?? 'Please try again.'));
         },
@@ -719,6 +852,7 @@ export default function AddCertificateRoute() {
 
   const isLoading = addMut.isPending || imageUploading;
   const certIcon = getCertificateIoniconsName(name);
+  const validityLabel = getValidityLabel(issueDate, expiryDate);
 
   return (
     <Screen>
@@ -731,129 +865,165 @@ export default function AddCertificateRoute() {
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/* Hero cert preview */}
-        <View style={styles.heroCard}>
-          <View style={styles.heroBg} />
-          <View style={styles.heroIconWrap}>
-            <Ionicons name={certIcon} size={36} color={Colors.surface} />
-          </View>
-          <Text style={styles.heroName} numberOfLines={2}>
-            {name.trim() || 'Certificate Name'}
-          </Text>
-          <View style={styles.heroMeta}>
-            <View style={styles.heroMetaItem}>
-              <Ionicons name="calendar-outline" size={13} color={Colors.surface + 'AA'} />
-              <Text style={styles.heroMetaText}>{issueDate || 'Issue date'}</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Hero cert preview */}
+          <View style={styles.heroCard}>
+            <View style={styles.heroBg} />
+            <View style={styles.heroBgLeft} />
+            <View style={styles.heroIconWrap}>
+              <Ionicons name={certIcon} size={36} color={Colors.surface} />
             </View>
-            <View style={styles.heroMetaDot} />
-            <View style={styles.heroMetaItem}>
-              <Ionicons name="time-outline" size={13} color={Colors.surface + 'AA'} />
-              <Text style={styles.heroMetaText}>{expiryDate || 'Expiry date'}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Premium limit banner */}
-        {!isPremium && (
-          <View style={[styles.bannerRow, blocked && styles.bannerRowBlocked]}>
-            <Ionicons
-              name={blocked ? 'lock-closed' : 'information-circle-outline'}
-              size={16}
-              color={blocked ? Colors.warning : Colors.muted}
-            />
-            <Text style={[styles.bannerText, blocked && styles.bannerTextBlocked]}>
-              {blocked
-                ? `You've reached the free plan limit (3/3). Upgrade to add more.`
-                : `Free plan: ${certCount}/3 certificates used.`}
+            <Text style={styles.heroName} numberOfLines={2}>
+              {name.trim() || 'Certificate Name'}
             </Text>
-            {blocked && (
-              <Pressable onPress={() => router.push('/upgrade-premium')}>
-                <Text style={styles.bannerUpgrade}>Upgrade</Text>
-              </Pressable>
-            )}
-          </View>
-        )}
-
-        {/* Form */}
-        <View style={styles.formCard}>
-          <NameField
-            value={name}
-            onChangeText={(v) => {
-              setName(v);
-              setErrors((e) => ({ ...e, name: undefined }));
-            }}
-            error={errors.name}
-          />
-
-          <View style={styles.divider} />
-
-          <View style={styles.dateRow}>
-            <View style={styles.dateCol}>
-              <DateField
-                label="Issue date"
-                value={issueDate}
-                onChangeText={(v) => {
-                  setIssueDate(v);
-                  setErrors((e) => ({ ...e, issueDate: undefined }));
-                }}
-                error={errors.issueDate}
-              />
-            </View>
-            <View style={styles.dateCol}>
-              <DateField
-                label="Expiry date"
-                value={expiryDate}
-                onChangeText={(v) => {
-                  setExpiryDate(v);
-                  setErrors((e) => ({ ...e, expiryDate: undefined }));
-                }}
-                error={errors.expiryDate}
-              />
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Scan button (native only) */}
-          {Platform.OS !== 'web' && (
-            <Pressable
-              style={[styles.scanBtn, blocked && styles.scanBtnDisabled]}
-              onPress={() => !blocked && router.push('/(tabs)/certificates/scan')}
-              disabled={blocked}
-            >
-              <Ionicons name="scan-outline" size={20} color={blocked ? Colors.muted : Colors.accent} />
-              <View style={styles.scanBtnText}>
-                <Text style={[styles.scanTitle, blocked && styles.scanTitleDisabled]}>Scan with camera</Text>
-                <Text style={styles.scanHint}>Auto-fill fields from your document</Text>
+            {issuer.trim() ? (
+              <Text style={styles.heroIssuer} numberOfLines={1}>
+                {issuer.trim()}
+              </Text>
+            ) : null}
+            <View style={styles.heroMeta}>
+              <View style={styles.heroMetaItem}>
+                <Ionicons name="calendar-outline" size={13} color={Colors.surface + 'AA'} />
+                <Text style={styles.heroMetaText}>{issueDate || 'Issue date'}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color={Colors.muted} />
-            </Pressable>
+              <View style={styles.heroMetaDot} />
+              <View style={styles.heroMetaItem}>
+                <Ionicons name="time-outline" size={13} color={Colors.surface + 'AA'} />
+                <Text style={styles.heroMetaText}>{expiryDate || 'Expiry date'}</Text>
+              </View>
+            </View>
+
+            {/* Status badge + validity pill */}
+            <View style={styles.heroBadgeRow}>
+              <StatusBadge expiryDate={expiryDate} />
+              {validityLabel ? (
+                <View style={styles.validityPill}>
+                  <Text style={styles.validityText}>{validityLabel}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+
+          {/* Premium limit banner */}
+          {!isPremium && (
+            <View style={[styles.bannerRow, blocked && styles.bannerRowBlocked]}>
+              <Ionicons
+                name={blocked ? 'lock-closed' : 'information-circle-outline'}
+                size={16}
+                color={blocked ? Colors.warning : Colors.muted}
+              />
+              <Text style={[styles.bannerText, blocked && styles.bannerTextBlocked]}>
+                {blocked
+                  ? `You've reached the free plan limit (3/3). Upgrade to add more.`
+                  : `Free plan: ${certCount}/3 certificates used.`}
+              </Text>
+              {blocked && (
+                <Pressable onPress={() => router.push('/upgrade-premium')}>
+                  <Text style={styles.bannerUpgrade}>Upgrade</Text>
+                </Pressable>
+              )}
+            </View>
           )}
 
-          {/* Upload zone */}
-          <UploadZone file={pickedFile} onPress={pickFile} />
-        </View>
+          {/* Form */}
+          <View style={styles.formCard}>
+            <NameField
+              value={name}
+              onChangeText={(v) => {
+                setName(v);
+                setErrors((e) => ({ ...e, name: undefined }));
+              }}
+              error={errors.name}
+            />
 
-        {/* Save button */}
-        <View style={styles.saveSection}>
-          <Button
-            title={blocked ? 'Upgrade to Premium' : 'Save Certificate'}
-            disabled={isLoading}
-            loading={isLoading}
-            onPress={handleSave}
-          />
-        </View>
-      </ScrollView>
+            <View style={styles.divider} />
+
+            <IssuerField value={issuer} onChangeText={setIssuer} />
+
+            <View style={styles.divider} />
+
+            <View style={styles.dateRow}>
+              <View style={styles.dateCol}>
+                <DateField
+                  label="Issue date"
+                  value={issueDate}
+                  onChangeText={(v) => {
+                    setIssueDate(v);
+                    setErrors((e) => ({ ...e, issueDate: undefined }));
+                  }}
+                  error={errors.issueDate}
+                />
+              </View>
+              <View style={styles.dateCol}>
+                <DateField
+                  label="Expiry date"
+                  value={expiryDate}
+                  onChangeText={(v) => {
+                    setExpiryDate(v);
+                    setErrors((e) => ({ ...e, expiryDate: undefined }));
+                  }}
+                  error={errors.expiryDate}
+                />
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            {/* Scan button (native only) */}
+            {Platform.OS !== 'web' && (
+              <Pressable
+                style={[styles.scanBtn, blocked && styles.scanBtnDisabled]}
+                onPress={() => !blocked && router.push('/(tabs)/certificates/scan')}
+                disabled={blocked}
+              >
+                <Ionicons name="scan-outline" size={20} color={blocked ? Colors.muted : Colors.accent} />
+                <View style={styles.scanBtnText}>
+                  <Text style={[styles.scanTitle, blocked && styles.scanTitleDisabled]}>Scan with camera</Text>
+                  <Text style={styles.scanHint}>Auto-fill fields from your document</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={Colors.muted} />
+              </Pressable>
+            )}
+
+            {/* Upload zone */}
+            <UploadZone
+              file={pickedFile}
+              onPress={pickFile}
+              onRemove={() => setPickedFile(null)}
+            />
+          </View>
+
+          {/* Save button */}
+          <View style={styles.saveSection}>
+            <Button
+              title={blocked ? 'Upgrade to Premium' : 'Save Certificate'}
+              disabled={isLoading}
+              loading={isLoading}
+              onPress={handleSave}
+            />
+            <Text style={styles.saveHint}>
+              {pickedFile
+                ? 'Certificate and attachment will be saved together.'
+                : 'You can attach a document after saving too.'}
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -906,7 +1076,17 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     backgroundColor: Colors.accent,
-    opacity: 0.12,
+    opacity: 0.14,
+  },
+  heroBgLeft: {
+    position: 'absolute',
+    bottom: -30,
+    left: -30,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.accent,
+    opacity: 0.07,
   },
   heroIconWrap: {
     width: 72,
@@ -922,6 +1102,13 @@ const styles = StyleSheet.create({
     fontSize: Typography.titleSize,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  heroIssuer: {
+    color: Colors.surface + '88',
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: -Spacing.xs,
   },
   heroMeta: {
     flexDirection: 'row',
@@ -944,6 +1131,27 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 1.5,
     backgroundColor: Colors.surface + '55',
+  },
+  heroBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  validityPill: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  validityText: {
+    color: Colors.surface + 'CC',
+    fontSize: 11,
+    fontWeight: '600',
   },
 
   // Banner
@@ -1033,5 +1241,12 @@ const styles = StyleSheet.create({
   // Save section
   saveSection: {
     gap: Spacing.sm,
+    alignItems: 'center',
+  },
+  saveHint: {
+    color: Colors.muted,
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });

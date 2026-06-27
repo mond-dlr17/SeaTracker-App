@@ -120,6 +120,7 @@ export default function EditCertificateRoute() {
   const cert = certQuery.data ?? null;
 
   const [name, setName] = useState('');
+  const [issuer, setIssuer] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [editing, setEditing] = useState(false);
@@ -130,6 +131,7 @@ export default function EditCertificateRoute() {
   if (cert && cert.id !== hydratedId) {
     setHydratedId(cert.id);
     setName(cert.name);
+    setIssuer(cert.issuer ?? '');
     setIssueDate(cert.issueDate);
     setExpiryDate(cert.expiryDate);
   }
@@ -205,7 +207,7 @@ export default function EditCertificateRoute() {
 
         <View style={styles.section}>
           <Text style={styles.certTitle}>{cert.name}</Text>
-          <Text style={styles.meta}>Certificate details</Text>
+          <Text style={styles.meta}>{cert.issuer || 'Certificate details'}</Text>
         </View>
 
         <Card style={styles.card}>
@@ -216,6 +218,7 @@ export default function EditCertificateRoute() {
           <Card style={styles.card}>
             <Text style={styles.sectionLabel}>Edit details</Text>
             <TextField label="Name" value={name} onChangeText={setName} />
+            <TextField label="Issuing authority (optional)" value={issuer} onChangeText={setIssuer} />
             <TextField label="Issue date (YYYY-MM-DD)" value={issueDate} onChangeText={setIssueDate} />
             <TextField label="Expiry date (YYYY-MM-DD)" value={expiryDate} onChangeText={setExpiryDate} />
             <Button
