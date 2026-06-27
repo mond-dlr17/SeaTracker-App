@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 
-import type { Certificate, CertificateAttachment } from '../../domain/models/Certificate';
+import type { Certificate, CertificateAttachment } from '@/domain/models/Certificate';
 
 /** Synthetic id for pre–multi-attachment certificates stored as `fileUrl` / `filePath` only. */
 export const LEGACY_CERTIFICATE_ATTACHMENT_ID = '__legacy__';

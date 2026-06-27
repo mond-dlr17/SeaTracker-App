@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { Screen } from '../../shared/components/Screen';
-import { Card } from '../../shared/components/Card';
-import { TextField } from '../../shared/components/TextField';
-import { Button } from '../../shared/components/Button';
-import { Colors } from '../../shared/utils/colors';
-import { Radius, Spacing, Typography } from '../../shared/utils/theme';
-import { registerWithEmail } from '../../features/auth/authService';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { TextField } from '@/shared/components/TextField';
+import { Button } from '@/shared/components/Button';
+import { Colors } from '@/shared/utils/colors';
+import { Radius, Spacing, Typography } from '@/shared/utils/theme';
+import { registerWithEmail } from '@/features/auth/authService';
 
 export default function RegisterRoute() {
   const [fullName, setFullName] = useState('');

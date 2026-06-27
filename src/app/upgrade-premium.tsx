@@ -4,8 +4,8 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
-import { Colors } from '../shared/utils/colors';
-import { Radius, Spacing, Typography } from '../shared/utils/theme';
+import { Colors } from '@/shared/utils/colors';
+import { Radius, Spacing, Typography } from '@/shared/utils/theme';
 
 type BillingInterval = 'monthly' | 'annually';
 

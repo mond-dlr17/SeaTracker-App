@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { Colors } from '../../../shared/utils/colors';
+import { Colors } from '@/shared/utils/colors';
 
 export default function CertificatesStackLayout() {
   return (

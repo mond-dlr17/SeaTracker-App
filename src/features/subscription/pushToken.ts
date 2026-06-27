@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
-import { firestore } from '../../shared/services/firebase';
+import { firestore } from '@/shared/services/firebase';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

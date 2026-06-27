@@ -1,11 +1,11 @@
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 
-import { Screen } from '../../../../shared/components/Screen';
-import { Card } from '../../../../shared/components/Card';
-import { Colors } from '../../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../../shared/utils/theme';
-import { usePost } from '../../../../features/posts/postsHooks';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
+import { usePost } from '@/features/posts/postsHooks';
 
 export default function TipDetailRoute() {
   const params = useLocalSearchParams<{ postId: string }>();

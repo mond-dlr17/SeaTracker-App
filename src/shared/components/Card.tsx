@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { Colors } from '../utils/colors';
-import { Radius, Spacing } from '../utils/theme';
+import { Colors } from '@/shared/utils/colors';
+import { Radius, Spacing } from '@/shared/utils/theme';
 
 export function Card({
   children,

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getPost, listPosts } from './postsService';
+import { getPost, listPosts } from '@/features/posts/postsService';
 
 export function usePosts() {
   return useQuery({ queryKey: ['posts'], queryFn: listPosts });

@@ -2,8 +2,8 @@ import { PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '../utils/colors';
-import { Spacing } from '../utils/theme';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing } from '@/shared/utils/theme';
 
 export function Screen({ children }: PropsWithChildren) {
   const insets = useSafeAreaInsets();

@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import type { CertificateStatus } from '../../domain/models/Certificate';
+import type { CertificateStatus } from '@/domain/models/Certificate';
 
 export function getCertificateStatus(expiryDate: string, _issueDate?: string): CertificateStatus {
   // Status is based on time left until expiry (relative to today).

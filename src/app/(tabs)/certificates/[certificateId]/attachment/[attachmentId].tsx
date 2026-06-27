@@ -6,15 +6,15 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAuth } from '../../../../../features/auth/AuthProvider';
-import { useCertificate } from '../../../../../features/certificates/certificatesHooks';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { useCertificate } from '@/features/certificates/certificatesHooks';
 import {
   attachmentKindFromMime,
   listCertificateAttachments,
-} from '../../../../../features/certificates/certificateAttachments';
-import { Screen } from '../../../../../shared/components/Screen';
-import { Colors } from '../../../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../../../shared/utils/theme';
+} from '@/features/certificates/certificateAttachments';
+import { Screen } from '@/shared/components/Screen';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
 
 export default function CertificateAttachmentViewerRoute() {
   const navigation = useNavigation<any>();

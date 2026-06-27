@@ -1,11 +1,11 @@
 import { FlatList, StyleSheet, Text } from 'react-native';
 import { router } from 'expo-router';
 
-import { Screen } from '../../../../shared/components/Screen';
-import { Card } from '../../../../shared/components/Card';
-import { Colors } from '../../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../../shared/utils/theme';
-import { usePosts } from '../../../../features/posts/postsHooks';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
+import { usePosts } from '@/features/posts/postsHooks';
 
 export default function TipsListRoute() {
   const q = usePosts();

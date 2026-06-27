@@ -6,11 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 import TextRecognition from '@react-native-ml-kit/text-recognition';
 
-import { extractCertificateFieldsFromOcr } from '../../../features/documentScan/extractCertificateFields';
-import { setPendingCertificateScan } from '../../../features/documentScan/pendingCertificateScan';
-import { Button } from '../../../shared/components/Button';
-import { Colors } from '../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../shared/utils/theme';
+import { extractCertificateFieldsFromOcr } from '@/features/documentScan/extractCertificateFields';
+import { setPendingCertificateScan } from '@/features/documentScan/pendingCertificateScan';
+import { Button } from '@/shared/components/Button';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
 
 function toFileUri(path: string) {
   return path.startsWith('file://') ? path : `file://${path}`;

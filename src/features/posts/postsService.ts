@@ -1,5 +1,5 @@
 import { collection, doc, getDoc, getDocs, orderBy, query } from 'firebase/firestore';
-import { firestore } from '../../shared/services/firebase';
+import { firestore } from '@/shared/services/firebase';
 
 export type Post = {
   id: string;

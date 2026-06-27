@@ -55,6 +55,7 @@
     "eslint": "^9",
     "eslint-config-expo": "^56.0.4",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "prettier": "^3.9.0",
     "reactotron-react-native": "^5.1.18",
     "typescript": "~5.9.2"

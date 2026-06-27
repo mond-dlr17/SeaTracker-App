@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Env } from './env';
+import { Env } from '@/shared/services/env';
 
 export const api = axios.create({
   baseURL: Env.apiBaseUrl || undefined,

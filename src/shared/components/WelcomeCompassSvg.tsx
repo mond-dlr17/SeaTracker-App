@@ -1,7 +1,7 @@
 import React from 'react';
 import Svg, { Circle, Defs, Filter, FeGaussianBlur, Path, type SvgProps } from 'react-native-svg';
 
-import { Colors } from '../utils/colors';
+import { Colors } from '@/shared/utils/colors';
 
 export function WelcomeCompassSvg({ size = 256, ...props }: { size?: number } & SvgProps) {
   return (

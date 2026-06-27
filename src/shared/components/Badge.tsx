@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../utils/colors';
-import { Radius } from '../utils/theme';
+import { Colors } from '@/shared/utils/colors';
+import { Radius } from '@/shared/utils/theme';
 
 const toneConfig = {
   green: { bg: Colors.valid, text: Colors.white },

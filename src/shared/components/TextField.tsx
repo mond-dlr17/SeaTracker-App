@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { Colors } from '../utils/colors';
-import { Radius, Spacing, Typography } from '../utils/theme';
+import { Colors } from '@/shared/utils/colors';
+import { Radius, Spacing, Typography } from '@/shared/utils/theme';
 
 export function TextField({
   label,

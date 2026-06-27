@@ -11,10 +11,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
 
-import { AppProviders } from '../core/providers/AppProviders';
-import { useAuth } from '../features/auth/AuthProvider';
-import { LoadingScreen } from '../shared/components/LoadingScreen';
-import { Colors } from '../shared/utils/colors';
+import { AppProviders } from '@/core/providers/AppProviders';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { LoadingScreen } from '@/shared/components/LoadingScreen';
+import { Colors } from '@/shared/utils/colors';
 
 export default function RootLayout() {
   return (

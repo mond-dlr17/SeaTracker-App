@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 
-import { useAuth } from '../../../features/auth/AuthProvider';
-import { Screen } from '../../../shared/components/Screen';
-import { Card } from '../../../shared/components/Card';
-import { TextField } from '../../../shared/components/TextField';
-import { Button } from '../../../shared/components/Button';
-import { Colors } from '../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../shared/utils/theme';
-import { logout, updateUserProfile } from '../../../features/auth/authService';
-import { ensurePushToken } from '../../../features/subscription/pushToken';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { TextField } from '@/shared/components/TextField';
+import { Button } from '@/shared/components/Button';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
+import { logout, updateUserProfile } from '@/features/auth/authService';
+import { ensurePushToken } from '@/features/subscription/pushToken';
 
 export default function ProfileRoute() {
   const { user, profile } = useAuth();

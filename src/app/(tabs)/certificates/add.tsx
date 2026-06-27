@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -17,23 +17,23 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useAuth } from '../../../features/auth/AuthProvider';
-import { useAddCertificate, useCertificates } from '../../../features/certificates/certificatesHooks';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { useAddCertificate, useCertificates } from '@/features/certificates/certificatesHooks';
 import {
   CERTIFICATE_ATTACHMENT_PICKER_TYPES,
   isAllowedCertificateAttachment,
   normalizeAttachmentContentType,
   resolveLocalFileSizeBytes,
   validateCertificateAttachmentSize,
-} from '../../../features/certificates/certificateAttachments';
-import { removeCertificate, uploadCertificateFile } from '../../../features/certificates/certificatesService';
-import { CERT_ICONS, getCertificateIoniconsName } from '../../../features/certificates/certificateIcons';
-import { consumePendingCertificateScan } from '../../../features/documentScan/pendingCertificateScan';
-import { Screen } from '../../../shared/components/Screen';
-import { Button } from '../../../shared/components/Button';
-import { Colors } from '../../../shared/utils/colors';
-import { Radius, Spacing, Typography } from '../../../shared/utils/theme';
-import { isValidISODate } from '../../../shared/utils/validation';
+} from '@/features/certificates/certificateAttachments';
+import { removeCertificate, uploadCertificateFile } from '@/features/certificates/certificatesService';
+import { CERT_ICONS, getCertificateIoniconsName } from '@/features/certificates/certificateIcons';
+import { consumePendingCertificateScan } from '@/features/documentScan/pendingCertificateScan';
+import { Screen } from '@/shared/components/Screen';
+import { Button } from '@/shared/components/Button';
+import { Colors } from '@/shared/utils/colors';
+import { Radius, Spacing, Typography } from '@/shared/utils/theme';
+import { isValidISODate } from '@/shared/utils/validation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,7 +84,12 @@ function DateField({
           !!error && dateStyles.inputRowError,
         ]}
       >
-        <Ionicons name="calendar-outline" size={18} color={error ? Colors.expired : focused ? Colors.accent : Colors.muted} style={dateStyles.icon} />
+        <Ionicons
+          name="calendar-outline"
+          size={18}
+          color={error ? Colors.expired : focused ? Colors.accent : Colors.muted}
+          style={dateStyles.icon}
+        />
         <TextInput
           value={value}
           onChangeText={handleChange}
@@ -210,14 +215,21 @@ function NameField({
           {filtered.map((s) => (
             <Pressable key={s} style={nameStyles.chip} onPress={() => onChangeText(s)}>
               <Ionicons name={(CERT_ICONS as any)[s]} size={13} color={Colors.accent} />
-              <Text style={nameStyles.chipText} numberOfLines={1}>{s}</Text>
+              <Text style={nameStyles.chipText} numberOfLines={1}>
+                {s}
+              </Text>
             </Pressable>
           ))}
         </ScrollView>
       )}
 
       {/* Full picker modal */}
-      <Modal visible={showPicker} transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
+      <Modal
+        visible={showPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPicker(false)}
+      >
         <View style={pickerStyles.overlay}>
           <View style={pickerStyles.sheet}>
             <View style={pickerStyles.handle} />
@@ -233,9 +245,16 @@ function NameField({
                   }}
                 >
                   <View style={[pickerStyles.gridIcon, value === s && pickerStyles.gridIconSelected]}>
-                    <Ionicons name={(CERT_ICONS as any)[s]} size={22} color={value === s ? Colors.surface : Colors.accent} />
+                    <Ionicons
+                      name={(CERT_ICONS as any)[s]}
+                      size={22}
+                      color={value === s ? Colors.surface : Colors.accent}
+                    />
                   </View>
-                  <Text style={[pickerStyles.gridLabel, value === s && pickerStyles.gridLabelSelected]} numberOfLines={2}>
+                  <Text
+                    style={[pickerStyles.gridLabel, value === s && pickerStyles.gridLabelSelected]}
+                    numberOfLines={2}
+                  >
                     {s}
                   </Text>
                 </TouchableOpacity>
@@ -418,7 +437,9 @@ function UploadZone({ file, onPress }: { file: PickedFile | null; onPress: () =>
         {file.contentType?.includes('pdf') ? (
           <View style={uploadStyles.pdfPreview}>
             <Ionicons name="document-text" size={32} color={Colors.accent} />
-            <Text style={uploadStyles.pdfName} numberOfLines={2}>{file.filename}</Text>
+            <Text style={uploadStyles.pdfName} numberOfLines={2}>
+              {file.filename}
+            </Text>
             <Text style={uploadStyles.pdfHint}>PDF — tap to replace</Text>
           </View>
         ) : (
@@ -430,7 +451,9 @@ function UploadZone({ file, onPress }: { file: PickedFile | null; onPress: () =>
             </View>
           </View>
         )}
-        <Text style={uploadStyles.filenamePill} numberOfLines={1}>{file.filename}</Text>
+        <Text style={uploadStyles.filenamePill} numberOfLines={1}>
+          {file.filename}
+        </Text>
       </Pressable>
     );
   }
@@ -554,12 +577,9 @@ export default function AddCertificateRoute() {
   const [name, setName] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
-  const [pickedImage, setPickedImage] = useState<null | {
-    localUri: string;
-    filename: string;
-    contentType?: string;
-  }>(null);
+  const [pickedFile, setPickedFile] = useState<PickedFile | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   useFocusEffect(
     useCallback(() => {
@@ -667,13 +687,19 @@ export default function AddCertificateRoute() {
                 sizeBytes: sizeBytes ?? undefined,
               });
             } catch (e) {
+              // Best-effort cleanup so users don't end up with an orphan cert without a file.
+              // eslint-disable-next-line no-console
               console.error('uploadCertificateFile failed:', e);
               try {
                 await removeCertificate(uid, certificateId);
               } catch {
+                // eslint-disable-next-line no-console
                 console.warn('removeCertificate cleanup failed; keeping orphan cert.', e);
               }
-              Alert.alert("Couldn't upload file", 'Please try again and make sure the file is accessible on your device.');
+              Alert.alert(
+                "Couldn't upload file",
+                'Please try again and make sure the file is accessible on your device.',
+              );
               return;
             } finally {
               setImageUploading(false);
@@ -682,6 +708,8 @@ export default function AddCertificateRoute() {
           router.replace(`/(tabs)/certificates/${certificateId}`);
         },
         onError: (e) => {
+          // Helpful for debugging permission/rules errors.
+          // eslint-disable-next-line no-console
           console.error('addCertificate failed:', e);
           Alert.alert("Couldn't save certificate", String((e as any)?.message ?? 'Please try again.'));
         },
@@ -753,7 +781,14 @@ export default function AddCertificateRoute() {
 
         {/* Form */}
         <View style={styles.formCard}>
-          <NameField value={name} onChangeText={(v) => { setName(v); setErrors((e) => ({ ...e, name: undefined })); }} error={errors.name} />
+          <NameField
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              setErrors((e) => ({ ...e, name: undefined }));
+            }}
+            error={errors.name}
+          />
 
           <View style={styles.divider} />
 
@@ -762,7 +797,10 @@ export default function AddCertificateRoute() {
               <DateField
                 label="Issue date"
                 value={issueDate}
-                onChangeText={(v) => { setIssueDate(v); setErrors((e) => ({ ...e, issueDate: undefined })); }}
+                onChangeText={(v) => {
+                  setIssueDate(v);
+                  setErrors((e) => ({ ...e, issueDate: undefined }));
+                }}
                 error={errors.issueDate}
               />
             </View>
@@ -770,7 +808,10 @@ export default function AddCertificateRoute() {
               <DateField
                 label="Expiry date"
                 value={expiryDate}
-                onChangeText={(v) => { setExpiryDate(v); setErrors((e) => ({ ...e, expiryDate: undefined })); }}
+                onChangeText={(v) => {
+                  setExpiryDate(v);
+                  setErrors((e) => ({ ...e, expiryDate: undefined }));
+                }}
                 error={errors.expiryDate}
               />
             </View>
@@ -802,67 +843,9 @@ export default function AddCertificateRoute() {
         <View style={styles.saveSection}>
           <Button
             title={blocked ? 'Upgrade to Premium' : 'Save Certificate'}
-            disabled={addMut.isPending || imageUploading}
-            loading={addMut.isPending || imageUploading}
-            onPress={() => {
-              if (blocked) {
-                router.push('/upgrade-premium');
-                return;
-              }
-              if (!name.trim()) return Alert.alert('Missing name', 'Please enter a certificate name.');
-              if (!isValidISODate(issueDate))
-                return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
-              if (!isValidISODate(expiryDate))
-                return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
-              addMut.mutate(
-                { name, issueDate, expiryDate },
-                {
-                  onSuccess: async (certificateId) => {
-                    if (pickedImage) {
-                      setImageUploading(true);
-                      try {
-                        const sizeBytes = await resolveLocalFileSizeBytes(pickedImage.localUri);
-                        await uploadCertificateFile({
-                          uid,
-                          certificateId,
-                          localUri: pickedImage.localUri,
-                          filename: pickedImage.filename,
-                          contentType: pickedImage.contentType,
-                          sizeBytes: sizeBytes ?? undefined,
-                        });
-                      } catch (e) {
-                        // Best-effort cleanup so users don't end up with an orphan cert without photo.
-                        // eslint-disable-next-line no-console
-                        console.error('uploadCertificateFile failed:', e);
-                        try {
-                          await removeCertificate(uid, certificateId);
-                        } catch {
-                          // eslint-disable-next-line no-console
-                          console.warn('removeCertificate cleanup failed; keeping orphan cert.', e);
-                        }
-                        Alert.alert(
-                          'Couldn’t upload image',
-                          'Please try again and make sure the file is accessible on your device.',
-                        );
-                        return;
-                      } finally {
-                        setImageUploading(false);
-                      }
-                    }
-                    router.replace(`/(tabs)/certificates/${certificateId}`);
-                  },
-                  onError: (e) => {
-                    // Helpful for debugging permission/rules errors.
-                    // eslint-disable-next-line no-console
-                    console.error('addCertificate failed:', e);
-                    Alert.alert(
-                      'Couldn’t save certificate',
-                      String((e as any)?.message ?? 'Please try again.'),
-                    );
-                  },
-                },
-              );
-            }}
+            disabled={isLoading}
+            loading={isLoading}
+            onPress={handleSave}
           />
         </View>
       </ScrollView>

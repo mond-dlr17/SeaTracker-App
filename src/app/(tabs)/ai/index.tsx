@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { Alert, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 
-import { Screen } from '../../../shared/components/Screen';
-import { Card } from '../../../shared/components/Card';
-import { Button } from '../../../shared/components/Button';
-import { Colors } from '../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../shared/utils/theme';
-import { useAuth } from '../../../features/auth/AuthProvider';
-import { useCertificates } from '../../../features/certificates/certificatesHooks';
-import { aiAdvisor } from '../../../features/ai/aiService';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { Button } from '@/shared/components/Button';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { useCertificates } from '@/features/certificates/certificatesHooks';
+import { aiAdvisor } from '@/features/ai/aiService';
 
 export default function AIAdvisorRoute() {
   const { user, profile } = useAuth();

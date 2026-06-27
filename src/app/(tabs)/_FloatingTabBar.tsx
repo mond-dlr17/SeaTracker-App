@@ -2,7 +2,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '../../shared/utils/colors';
+import { Colors } from '@/shared/utils/colors';
 
 const BAR_HEIGHT = 72;
 const FAB_SIZE = 56;

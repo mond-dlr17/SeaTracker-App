@@ -1,5 +1,5 @@
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
-import { firestore } from '../../shared/services/firebase';
+import { firestore } from '@/shared/services/firebase';
 
 export type Training = {
   id: string;

@@ -3,8 +3,8 @@ import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 
-import type { UserProfile } from '../../domain/models/UserProfile';
-import { firebaseAuth, firestore } from '../../shared/services/firebase';
+import type { UserProfile } from '@/domain/models/UserProfile';
+import { firebaseAuth, firestore } from '@/shared/services/firebase';
 
 type AuthContextValue = {
   user: User | null;

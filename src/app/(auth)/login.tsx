@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link, router } from 'expo-router';
 
-import { Screen } from '../../shared/components/Screen';
-import { Card } from '../../shared/components/Card';
-import { TextField } from '../../shared/components/TextField';
-import { Button } from '../../shared/components/Button';
-import { Colors } from '../../shared/utils/colors';
-import { Spacing, Typography } from '../../shared/utils/theme';
-import { loginWithEmail } from '../../features/auth/authService';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { TextField } from '@/shared/components/TextField';
+import { Button } from '@/shared/components/Button';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
+import { loginWithEmail } from '@/features/auth/authService';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 
 export default function LoginRoute() {

@@ -36,4 +36,11 @@ src/
 
 ## Imports
 
-Use relative imports (this repo has no path aliases): `import { Colors } from '../../shared/utils/colors'`. Keep external → internal import groups separated by a blank line.
+Use the `@/` path alias for everything under `src/` (configured in `tsconfig.json` `paths`, resolved by Metro via `experiments.tsconfigPaths`):
+
+```ts
+import { Colors } from '@/shared/utils/colors';
+import { useAuth } from '@/features/auth/AuthProvider';
+```
+
+Do NOT use deep relative imports like `../../shared/...`. Relative imports are only acceptable for files outside `src/` (e.g. the root `ReactotronConfig`). Keep external → internal (`@/…`) import groups separated by a blank line.

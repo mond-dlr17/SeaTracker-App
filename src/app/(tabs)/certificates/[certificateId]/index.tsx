@@ -5,7 +5,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import dayjs from 'dayjs';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
-import { useAuth } from '../../../../features/auth/AuthProvider';
+import { useAuth } from '@/features/auth/AuthProvider';
 import {
   attachmentKindFromMime,
   CERTIFICATE_ATTACHMENT_PICKER_TYPES,
@@ -15,25 +15,25 @@ import {
   normalizeAttachmentContentType,
   resolveLocalFileSizeBytes,
   validateCertificateAttachmentSize,
-} from '../../../../features/certificates/certificateAttachments';
+} from '@/features/certificates/certificateAttachments';
 import {
   useCertificate,
   useRemoveCertificateAttachment,
   useUpdateCertificate,
   useUploadCertificateFile,
   useRemoveCertificate,
-} from '../../../../features/certificates/certificatesHooks';
-import { getCertificateIoniconsName } from '../../../../features/certificates/certificateIcons';
-import { getCertificateStatus } from '../../../../features/certificates/certificateStatus';
-import { Screen } from '../../../../shared/components/Screen';
-import { Card } from '../../../../shared/components/Card';
-import { Button } from '../../../../shared/components/Button';
-import { TextField } from '../../../../shared/components/TextField';
-import { Colors } from '../../../../shared/utils/colors';
-import { formatDate } from '../../../../shared/utils/formatDate';
-import { Spacing, Typography } from '../../../../shared/utils/theme';
+} from '@/features/certificates/certificatesHooks';
+import { getCertificateIoniconsName } from '@/features/certificates/certificateIcons';
+import { getCertificateStatus } from '@/features/certificates/certificateStatus';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { Button } from '@/shared/components/Button';
+import { TextField } from '@/shared/components/TextField';
+import { Colors } from '@/shared/utils/colors';
+import { formatDate } from '@/shared/utils/formatDate';
+import { Spacing, Typography } from '@/shared/utils/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { isValidISODate } from '../../../../shared/utils/validation';
+import { isValidISODate } from '@/shared/utils/validation';
 
 function RenewalTimeline({ issueDate, expiryDate }: { issueDate: string; expiryDate: string }) {
   // Capture "now" once at mount: calling Date.now() during render is impure.

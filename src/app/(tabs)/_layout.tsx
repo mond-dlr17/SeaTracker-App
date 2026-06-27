@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
-import { Colors } from '../../shared/utils/colors';
+import { Colors } from '@/shared/utils/colors';
 import { Ionicons } from '@expo/vector-icons';
-import { FloatingTabBar } from './_FloatingTabBar';
+import { FloatingTabBar } from '@/app/(tabs)/_FloatingTabBar';
 
 export default function TabsLayout() {
   return (

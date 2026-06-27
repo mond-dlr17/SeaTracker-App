@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { listTrainings } from './trainingsService';
+import { listTrainings } from '@/features/trainings/trainingsService';
 
 export function useTrainings(courseType?: string) {
   return useQuery({

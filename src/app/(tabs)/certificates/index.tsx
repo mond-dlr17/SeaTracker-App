@@ -3,18 +3,18 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'rea
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
-import { useAuth } from '../../../features/auth/AuthProvider';
-import { useCertificates, useSeedSampleCertificates } from '../../../features/certificates/certificatesHooks';
-import { getCertificateIoniconsName } from '../../../features/certificates/certificateIcons';
-import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
-import { Screen } from '../../../shared/components/Screen';
-import { Card } from '../../../shared/components/Card';
-import { Button } from '../../../shared/components/Button';
-import { Badge } from '../../../shared/components/Badge';
-import { AlertCard } from '../../../shared/components/AlertCard';
-import { Colors } from '../../../shared/utils/colors';
-import { formatDate } from '../../../shared/utils/formatDate';
-import { Spacing, Typography } from '../../../shared/utils/theme';
+import { useAuth } from '@/features/auth/AuthProvider';
+import { useCertificates, useSeedSampleCertificates } from '@/features/certificates/certificatesHooks';
+import { getCertificateIoniconsName } from '@/features/certificates/certificateIcons';
+import { getCertificateStatus } from '@/features/certificates/certificateStatus';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { Button } from '@/shared/components/Button';
+import { Badge } from '@/shared/components/Badge';
+import { AlertCard } from '@/shared/components/AlertCard';
+import { Colors } from '@/shared/utils/colors';
+import { formatDate } from '@/shared/utils/formatDate';
+import { Spacing, Typography } from '@/shared/utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function CertificateListRoute() {

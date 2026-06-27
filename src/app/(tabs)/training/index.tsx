@@ -3,11 +3,11 @@ import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from '
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Screen } from '../../../shared/components/Screen';
-import { Card } from '../../../shared/components/Card';
-import { Colors } from '../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../shared/utils/theme';
-import { useTrainings } from '../../../features/trainings/trainingsHooks';
+import { Screen } from '@/shared/components/Screen';
+import { Card } from '@/shared/components/Card';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
+import { useTrainings } from '@/features/trainings/trainingsHooks';
 
 export default function TrainingListRoute() {
   const [courseType, setCourseType] = useState<string | undefined>(undefined);

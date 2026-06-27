@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { Certificate } from '../../domain/models/Certificate';
+import type { Certificate } from '@/domain/models/Certificate';
 import {
   addCertificate,
   getCertificate,
@@ -10,7 +10,7 @@ import {
   updateCertificate,
   uploadCertificateFile,
   seedSampleCertificates,
-} from './certificatesService';
+} from '@/features/certificates/certificatesService';
 
 export function certificatesKey(uid: string) {
   return ['certificates', uid] as const;

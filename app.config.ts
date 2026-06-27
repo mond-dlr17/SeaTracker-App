@@ -39,6 +39,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: 'com.drxlabs.seatrack.app',
   },
+  // Let Metro resolve the `@/*` tsconfig path alias at bundle time.
+  experiments: {
+    tsconfigPaths: true,
+  },
   extra: {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? '',
     firebase: {

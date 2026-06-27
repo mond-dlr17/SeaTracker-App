@@ -1,6 +1,6 @@
-import { api } from '../../shared/services/api';
-import type { UserProfile } from '../../domain/models/UserProfile';
-import type { Certificate } from '../../domain/models/Certificate';
+import { api } from '@/shared/services/api';
+import type { UserProfile } from '@/domain/models/UserProfile';
+import type { Certificate } from '@/domain/models/Certificate';
 
 export type AIAdvisorResponse = {
   suggestions: string;

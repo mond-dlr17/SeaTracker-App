@@ -13,13 +13,13 @@ import {
 } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
-import type { Certificate, CertificateAttachment } from '../../domain/models/Certificate';
+import type { Certificate, CertificateAttachment } from '@/domain/models/Certificate';
 import {
   LEGACY_CERTIFICATE_ATTACHMENT_ID,
   listCertificateAttachments,
   parseStoredAttachments,
-} from './certificateAttachments';
-import { firestore, storage } from '../../shared/services/firebase';
+} from '@/features/certificates/certificateAttachments';
+import { firestore, storage } from '@/shared/services/firebase';
 
 function certsCollection(uid: string) {
   return collection(firestore, 'users', uid, 'certificates');

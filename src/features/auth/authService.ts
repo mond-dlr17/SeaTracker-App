@@ -9,8 +9,8 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
-import { firebaseAuth, firestore } from '../../shared/services/firebase';
-import type { UserProfile } from '../../domain/models/UserProfile';
+import { firebaseAuth, firestore } from '@/shared/services/firebase';
+import type { UserProfile } from '@/domain/models/UserProfile';
 
 function isAuthError(e: unknown): e is AuthError {
   return typeof e === 'object' && e !== null && 'code' in e && typeof (e as AuthError).code === 'string';

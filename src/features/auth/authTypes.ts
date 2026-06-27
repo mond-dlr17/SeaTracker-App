@@ -1,5 +1,5 @@
 import type { User } from 'firebase/auth';
-import type { UserProfile } from '../../domain/models/UserProfile';
+import type { UserProfile } from '@/domain/models/UserProfile';
 
 export type AuthState = {
   user: User | null;

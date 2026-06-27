@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Env } from './env';
+import { Env } from '@/shared/services/env';
 
 const firebaseConfig = {
   apiKey: Env.firebase.apiKey,

@@ -1,5 +1,5 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../utils/colors';
+import { Colors } from '@/shared/utils/colors';
 
 export function LoadingScreen({ title }: { title?: string }) {
   return (

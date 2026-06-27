@@ -5,12 +5,12 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useRouter, Link } from 'expo-router';
 
-import { Screen } from '../../shared/components/Screen';
-import { Button } from '../../shared/components/Button';
-import { WelcomeCompassSvg } from '../../shared/components/WelcomeCompassSvg';
-import { Colors } from '../../shared/utils/colors';
-import { Spacing } from '../../shared/utils/theme';
-import { loginWithGoogleIdToken } from '../../features/auth/authService';
+import { Screen } from '@/shared/components/Screen';
+import { Button } from '@/shared/components/Button';
+import { WelcomeCompassSvg } from '@/shared/components/WelcomeCompassSvg';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing } from '@/shared/utils/theme';
+import { loginWithGoogleIdToken } from '@/features/auth/authService';
 
 export default function WelcomeRoute() {
   const router = useRouter();

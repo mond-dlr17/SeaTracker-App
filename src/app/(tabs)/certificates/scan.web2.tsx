@@ -2,9 +2,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '../../../shared/components/Button';
-import { Colors } from '../../../shared/utils/colors';
-import { Spacing, Typography } from '../../../shared/utils/theme';
+import { Button } from '@/shared/components/Button';
+import { Colors } from '@/shared/utils/colors';
+import { Spacing, Typography } from '@/shared/utils/theme';
 
 export default function ScanCertificateWebFallback() {
   const insets = useSafeAreaInsets();
