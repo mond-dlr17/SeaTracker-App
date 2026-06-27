@@ -10,7 +10,12 @@ export default function ScanCertificateWebFallback() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + Spacing.lg, paddingBottom: insets.bottom + Spacing.lg }]}>
+    <View
+      style={[
+        styles.root,
+        { paddingTop: insets.top + Spacing.lg, paddingBottom: insets.bottom + Spacing.lg },
+      ]}
+    >
       <Text style={styles.title}>Scanning</Text>
       <Text style={styles.body}>Document scanning runs in the iOS or Android app (dev build).</Text>
       <Button title="Go back" onPress={() => router.back()} />

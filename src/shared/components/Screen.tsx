@@ -10,16 +10,9 @@ export function Screen({ children }: PropsWithChildren) {
 
   // Use safe-area insets so content doesn't get clipped by the notch / home indicator.
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
       {/* Background gradient layer (visual only) */}
-      <Svg
-        pointerEvents="none"
-        style={styles.ambientSvg}
-        preserveAspectRatio="none"
-        viewBox="0 0 100 100"
-      >
+      <Svg pointerEvents="none" style={styles.ambientSvg} preserveAspectRatio="none" viewBox="0 0 100 100">
         <Defs>
           <RadialGradient id="screenAmbientRight" cx="92%" cy="10%" r="55%">
             <Stop offset="0%" stopColor={Colors.accent} stopOpacity={0.22} />
@@ -41,7 +34,7 @@ export function Screen({ children }: PropsWithChildren) {
           styles.content,
           {
             paddingTop: insets.top + Spacing.screenPaddingVertical,
-            paddingBottom:Spacing.screenPaddingVertical,
+            paddingBottom: Spacing.screenPaddingVertical,
           },
         ]}
       >

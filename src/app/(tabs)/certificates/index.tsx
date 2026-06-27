@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { useAuth } from '../../../features/auth/AuthProvider';
-import { useCertificates, useRemoveCertificate, useSeedSampleCertificates } from '../../../features/certificates/certificatesHooks';
+import { useCertificates, useSeedSampleCertificates } from '../../../features/certificates/certificatesHooks';
 import { getCertificateIoniconsName } from '../../../features/certificates/certificateIcons';
 import { getCertificateStatus } from '../../../features/certificates/certificateStatus';
 import { Screen } from '../../../shared/components/Screen';
@@ -21,13 +21,16 @@ export default function CertificateListRoute() {
   const { user } = useAuth();
   const uid = user?.uid ?? '';
   const certsQuery = useCertificates(uid);
-  const removeMut = useRemoveCertificate(uid);
   const seedMut = useSeedSampleCertificates(uid);
   const hasAutoSeededRef = useRef(false);
 
   const data = certsQuery.data ?? [];
-  const warningCount = data.filter((c) => getCertificateStatus(c.expiryDate, c.issueDate) === 'warning').length;
-  const expiredCount = data.filter((c) => getCertificateStatus(c.expiryDate, c.issueDate) === 'expired').length;
+  const warningCount = data.filter(
+    (c) => getCertificateStatus(c.expiryDate, c.issueDate) === 'warning',
+  ).length;
+  const expiredCount = data.filter(
+    (c) => getCertificateStatus(c.expiryDate, c.issueDate) === 'expired',
+  ).length;
   const alertCount = warningCount + expiredCount;
 
   useFocusEffect(
@@ -35,6 +38,7 @@ export default function CertificateListRoute() {
       if (!uid) return;
       // Ensure the list reflects any changes when coming back from other screens.
       certsQuery.refetch();
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- react-query's `refetch` is stable; depending on the whole query object would re-run on every render.
     }, [uid, certsQuery.refetch]),
   );
 
@@ -48,6 +52,7 @@ export default function CertificateListRoute() {
     if (hasAutoSeededRef.current) return;
     hasAutoSeededRef.current = true;
     seedMut.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot dev seed guarded by `hasAutoSeededRef`; depending on the mutation object would re-trigger it.
   }, [certsQuery.isError, certsQuery.isLoading, certsQuery.isFetching, data.length, seedMut.isPending, uid]);
 
   const renderAlertCardText = () => {
@@ -92,7 +97,7 @@ export default function CertificateListRoute() {
         }
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => {
-          const status = getCertificateStatus(item.expiryDate,item.issueDate);
+          const status = getCertificateStatus(item.expiryDate, item.issueDate);
           const tone = status === 'valid' ? 'green' : status === 'warning' ? 'yellow' : 'red';
           const label = status === 'valid' ? 'VALID' : status === 'warning' ? 'WARNING' : 'EXPIRED';
 
@@ -103,7 +108,9 @@ export default function CertificateListRoute() {
                   <Ionicons name={getCertificateIoniconsName(item.name)} size={22} color={Colors.accent} />
                 </View>
                 <View style={styles.certInfo}>
-                  <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.title} numberOfLines={1}>
+                    {item.name}
+                  </Text>
                   <Text style={styles.meta}>Expires {formatDate(item.expiryDate)}</Text>
                 </View>
                 <Badge label={label} tone={tone} />
@@ -116,7 +123,7 @@ export default function CertificateListRoute() {
             <Text style={styles.muted}>Loading…</Text>
           ) : certsQuery.isError ? (
             <Text style={styles.muted}>
-              Couldn't load certificates: {String((certsQuery.error as any)?.message ?? 'Unknown error')}
+              Couldn&apos;t load certificates: {String((certsQuery.error as any)?.message ?? 'Unknown error')}
             </Text>
           ) : (
             <Card>

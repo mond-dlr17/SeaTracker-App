@@ -1,5 +1,13 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, ActivityIndicator, View, type TextStyle, type ViewStyle } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  ActivityIndicator,
+  View,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 import { Colors } from '../utils/colors';
 import { Radius, Spacing } from '../utils/theme';
 
@@ -41,11 +49,15 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? Colors.white : Colors.text} />
+        <ActivityIndicator
+          color={variant === 'primary' || variant === 'danger' ? Colors.white : Colors.text}
+        />
       ) : (
         <View style={styles.contentRow}>
           {iconLeft ? <View style={styles.iconLeftWrap}>{iconLeft}</View> : null}
-          <Text style={[styles.text, variant === 'secondary' && styles.textSecondary, textStyle]}>{title}</Text>
+          <Text style={[styles.text, variant === 'secondary' && styles.textSecondary, textStyle]}>
+            {title}
+          </Text>
           {iconRight ? <View style={styles.iconRightWrap}>{iconRight}</View> : null}
         </View>
       )}

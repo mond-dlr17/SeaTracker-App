@@ -26,6 +26,21 @@ import { isValidISODate } from '../../../shared/utils/validation';
 export default function AddCertificateRoute() {
   const navigation = useNavigation<any>();
 
+  const { user, profile } = useAuth();
+  const uid = user?.uid ?? '';
+  const certsQuery = useCertificates(uid);
+  const addMut = useAddCertificate(uid);
+
+  const [name, setName] = useState('');
+  const [issueDate, setIssueDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [pickedImage, setPickedImage] = useState<null | {
+    localUri: string;
+    filename: string;
+    contentType?: string;
+  }>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       const parent = navigation.getParent?.();
@@ -60,17 +75,6 @@ export default function AddCertificateRoute() {
       };
     }, [navigation]),
   );
-
-  const { user, profile } = useAuth();
-  const uid = user?.uid ?? '';
-  const certsQuery = useCertificates(uid);
-  const addMut = useAddCertificate(uid);
-
-  const [name, setName] = useState('');
-  const [issueDate, setIssueDate] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [pickedImage, setPickedImage] = useState<null | { localUri: string; filename: string; contentType?: string }>(null);
-  const [imageUploading, setImageUploading] = useState(false);
 
   const isPremium = !!profile?.isPremium;
   const certCount = certsQuery.data?.length ?? 0;
@@ -110,10 +114,7 @@ export default function AddCertificateRoute() {
     const pickerSize = (file as { size?: number }).size;
     const sizeBytes = await resolveLocalFileSizeBytes(file.uri, pickerSize);
     if (sizeBytes == null) {
-      Alert.alert(
-        'Couldn’t read file size',
-        'Try saving the file to your device or pick another file.',
-      );
+      Alert.alert('Couldn’t read file size', 'Try saving the file to your device or pick another file.');
       return;
     }
     const sizeErr = validateCertificateAttachmentSize(sizeBytes);
@@ -218,8 +219,10 @@ export default function AddCertificateRoute() {
                 return;
               }
               if (!name.trim()) return Alert.alert('Missing name', 'Please enter a certificate name.');
-              if (!isValidISODate(issueDate)) return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
-              if (!isValidISODate(expiryDate)) return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
+              if (!isValidISODate(issueDate))
+                return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
+              if (!isValidISODate(expiryDate))
+                return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
               addMut.mutate(
                 { name, issueDate, expiryDate },
                 {
@@ -246,7 +249,10 @@ export default function AddCertificateRoute() {
                           // eslint-disable-next-line no-console
                           console.warn('removeCertificate cleanup failed; keeping orphan cert.', e);
                         }
-                        Alert.alert('Couldn’t upload image', 'Please try again and make sure the file is accessible on your device.');
+                        Alert.alert(
+                          'Couldn’t upload image',
+                          'Please try again and make sure the file is accessible on your device.',
+                        );
                         return;
                       } finally {
                         setImageUploading(false);
@@ -258,7 +264,10 @@ export default function AddCertificateRoute() {
                     // Helpful for debugging permission/rules errors.
                     // eslint-disable-next-line no-console
                     console.error('addCertificate failed:', e);
-                    Alert.alert('Couldn’t save certificate', String((e as any)?.message ?? 'Please try again.'));
+                    Alert.alert(
+                      'Couldn’t save certificate',
+                      String((e as any)?.message ?? 'Please try again.'),
+                    );
                   },
                 },
               );

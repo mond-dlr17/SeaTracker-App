@@ -1,5 +1,7 @@
+/* eslint-disable import/first -- Reactotron must initialise before other modules import app code. */
 // Must load first so Reactotron connects before other app code
 if (__DEV__ && Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- dev-only conditional require keeps Reactotron out of the production bundle
   require('../../ReactotronConfig');
 }
 
@@ -67,4 +69,3 @@ function AuthGate() {
     </Stack>
   );
 }
-

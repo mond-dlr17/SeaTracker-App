@@ -21,7 +21,11 @@ export default function TipsListRoute() {
           <Card>
             <Text style={styles.title}>{item.title}</Text>
             {item.subtitle ? <Text style={styles.subtitle}>{item.subtitle}</Text> : null}
-            <Text style={styles.link} onPress={() => router.push(`/(tabs)/profile/tips/${item.id}`)} suppressHighlighting>
+            <Text
+              style={styles.link}
+              onPress={() => router.push(`/(tabs)/profile/tips/${item.id}`)}
+              suppressHighlighting
+            >
               Read
             </Text>
           </Card>
@@ -49,4 +53,3 @@ const styles = StyleSheet.create({
   link: { color: Colors.accent, fontWeight: '700', marginTop: Spacing.sm },
   muted: { color: Colors.muted, fontWeight: '700' },
 });
-

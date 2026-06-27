@@ -14,25 +14,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
-      "react-native-vision-camera",
+      'react-native-vision-camera',
       {
-        "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera.",
+        cameraPermissionText: '$(PRODUCT_NAME) needs access to your Camera.',
 
         // optionally, if you want to record audio:
-        "enableMicrophonePermission": true,
-        "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone."
-      }
+        enableMicrophonePermission: true,
+        microphonePermissionText: '$(PRODUCT_NAME) needs access to your Microphone.',
+      },
     ],
     [
-      "expo-build-properties",
+      'expo-build-properties',
       {
-        "ios": {
+        ios: {
           // @nandorojo/galeria v2+ requires iOS 16+
-          "deploymentTarget": "16.0"
-        }
-      }
+          deploymentTarget: '16.0',
+        },
+      },
     ],
-
   ],
   ios: {
     bundleIdentifier: 'com.drxlabs.seatrack.app',
@@ -52,4 +51,3 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
 });
-

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
@@ -35,20 +35,15 @@ import { Spacing, Typography } from '../../../../shared/utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { isValidISODate } from '../../../../shared/utils/validation';
 
-function RenewalTimeline({
-  issueDate,
-  expiryDate,
-}: {
-  issueDate: string;
-  expiryDate: string;
-}) {
+function RenewalTimeline({ issueDate, expiryDate }: { issueDate: string; expiryDate: string }) {
+  // Capture "now" once at mount: calling Date.now() during render is impure.
+  const [now] = useState(() => Date.now());
   const start = dayjs(issueDate).valueOf();
   const end = dayjs(expiryDate).valueOf();
-  const now = Date.now();
   const total = end - start;
   const elapsed = Math.max(0, now - start);
   const progress = total > 0 ? Math.min(1, elapsed / total) : 0;
-  const status = getCertificateStatus(expiryDate,issueDate);
+  const status = getCertificateStatus(expiryDate, issueDate);
   const daysLeft = dayjs(expiryDate).startOf('day').diff(dayjs().startOf('day'), 'day');
 
   return (
@@ -128,13 +123,16 @@ export default function EditCertificateRoute() {
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [editing, setEditing] = useState(false);
+  const [hydratedId, setHydratedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!cert) return;
+  // Hydrate the edit form from the loaded certificate during render (React's
+  // "adjust state when a value changes" pattern) instead of a sync effect.
+  if (cert && cert.id !== hydratedId) {
+    setHydratedId(cert.id);
     setName(cert.name);
     setIssueDate(cert.issueDate);
     setExpiryDate(cert.expiryDate);
-  }, [cert?.id]);
+  }
 
   const imageUri = useMemo(() => (cert ? firstImageAttachmentUrl(cert) : undefined), [cert]);
 
@@ -154,10 +152,8 @@ export default function EditCertificateRoute() {
     return (
       <Screen>
         <Card style={styles.card}>
-          <Text style={styles.title}>Couldn't load certificate</Text>
-          <Text style={styles.meta}>{
-            String((certQuery.error as any)?.message ?? 'Unknown error')
-          }</Text>
+          <Text style={styles.title}>Couldn&apos;t load certificate</Text>
+          <Text style={styles.meta}>{String((certQuery.error as any)?.message ?? 'Unknown error')}</Text>
         </Card>
       </Screen>
     );
@@ -227,8 +223,10 @@ export default function EditCertificateRoute() {
               loading={updateMut.isPending}
               onPress={() => {
                 if (!name.trim()) return Alert.alert('Missing name', 'Please enter a certificate name.');
-                if (!isValidISODate(issueDate)) return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
-                if (!isValidISODate(expiryDate)) return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
+                if (!isValidISODate(issueDate))
+                  return Alert.alert('Invalid issue date', 'Use format YYYY-MM-DD.');
+                if (!isValidISODate(expiryDate))
+                  return Alert.alert('Invalid expiry date', 'Use format YYYY-MM-DD.');
                 updateMut.mutate(
                   { name, issueDate, expiryDate },
                   {
@@ -271,7 +269,12 @@ export default function EditCertificateRoute() {
               onPress={() => router.push('/(tabs)/training')}
               style={styles.primaryBtn}
             />
-            <Button title="Share PDF Copy" variant="secondary" onPress={() => {}} style={styles.secondaryBtn} />
+            <Button
+              title="Share PDF Copy"
+              variant="secondary"
+              onPress={() => {}}
+              style={styles.secondaryBtn}
+            />
           </>
         )}
 
@@ -297,9 +300,7 @@ export default function EditCertificateRoute() {
                 <View key={a.id} style={styles.attachmentRow}>
                   <Pressable
                     style={styles.attachmentMain}
-                    onPress={() =>
-                      router.push(`/(tabs)/certificates/${certificateId}/attachment/${a.id}`)
-                    }
+                    onPress={() => router.push(`/(tabs)/certificates/${certificateId}/attachment/${a.id}`)}
                   >
                     <Ionicons name={iconName} size={22} color={Colors.accent} />
                     <Text style={styles.attachmentName} numberOfLines={1}>
@@ -364,10 +365,7 @@ export default function EditCertificateRoute() {
               const mimeType = file.mimeType ?? '';
               const filename = file.name ?? 'attachment';
               if (!isAllowedCertificateAttachment(mimeType, filename)) {
-                Alert.alert(
-                  'Unsupported file',
-                  'Only PDF, PNG, JPG, JPEG, and HEIC files are allowed.',
-                );
+                Alert.alert('Unsupported file', 'Only PDF, PNG, JPG, JPEG, and HEIC files are allowed.');
                 return;
               }
 

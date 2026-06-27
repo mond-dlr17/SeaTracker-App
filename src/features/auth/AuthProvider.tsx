@@ -18,6 +18,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [trackedUid, setTrackedUid] = useState<string | null>(null);
+
+  // Clear any stale profile synchronously when the signed-in user changes
+  // (render-phase reset), so the effect below only manages the subscription.
+  const currentUid = user?.uid ?? null;
+  if (currentUid !== trackedUid) {
+    setTrackedUid(currentUid);
+    setProfile(null);
+  }
 
   useEffect(() => {
     const unsub = onAuthStateChanged(firebaseAuth, (nextUser) => {
@@ -28,10 +37,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      return;
-    }
+    if (!user) return;
 
     const ref = doc(firestore, 'users', user.uid);
     const unsub = onSnapshot(ref, (snap) => {
@@ -45,7 +51,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return unsub;
   }, [user]);
 
-  const value = useMemo<AuthContextValue>(() => ({ user, profile, initializing }), [user, profile, initializing]);
+  const value = useMemo<AuthContextValue>(
+    () => ({ user, profile, initializing }),
+    [user, profile, initializing],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -55,4 +64,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
-

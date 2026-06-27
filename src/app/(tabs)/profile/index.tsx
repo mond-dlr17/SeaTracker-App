@@ -21,14 +21,17 @@ export default function ProfileRoute() {
   const [yearsOfExperience, setYearsOfExperience] = useState('0');
   const [vesselTypes, setVesselTypes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [hydratedProfileId, setHydratedProfileId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!profile) return;
+  // Hydrate the form from the loaded profile during render (React's "adjust
+  // state when a value changes" pattern) instead of a sync effect.
+  if (profile && profile.id !== hydratedProfileId) {
+    setHydratedProfileId(profile.id);
     setFullName(profile.fullName ?? '');
     setRank(profile.rank ?? '');
     setYearsOfExperience(String(profile.yearsOfExperience ?? 0));
     setVesselTypes((profile.vesselTypes ?? []).join(', '));
-  }, [profile?.id]);
+  }
 
   useEffect(() => {
     if (!uid) return;
@@ -61,7 +64,8 @@ export default function ProfileRoute() {
           loading={saving}
           onPress={async () => {
             const years = Number(yearsOfExperience);
-            if (!Number.isFinite(years) || years < 0) return Alert.alert('Invalid years', 'Enter a valid number.');
+            if (!Number.isFinite(years) || years < 0)
+              return Alert.alert('Invalid years', 'Enter a valid number.');
             try {
               setSaving(true);
               await updateUserProfile(uid, {
@@ -84,7 +88,11 @@ export default function ProfileRoute() {
 
       <View style={styles.gap} />
 
-      <Button title="Tips & content" variant="secondary" onPress={() => router.push('/(tabs)/profile/tips')} />
+      <Button
+        title="Tips & content"
+        variant="secondary"
+        onPress={() => router.push('/(tabs)/profile/tips')}
+      />
 
       <View style={styles.gap} />
 

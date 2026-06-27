@@ -37,7 +37,10 @@ const EXT_TO_MIME: Record<string, string> = {
 
 export type CertificateAttachmentKind = 'image' | 'pdf' | 'unknown';
 
-export function attachmentKindFromMime(mime: string | undefined, filename: string): CertificateAttachmentKind {
+export function attachmentKindFromMime(
+  mime: string | undefined,
+  filename: string,
+): CertificateAttachmentKind {
   const m = (mime ?? '').toLowerCase();
   if (m === 'application/pdf' || m.includes('pdf')) return 'pdf';
   if (m.startsWith('image/')) return 'image';
@@ -47,7 +50,10 @@ export function attachmentKindFromMime(mime: string | undefined, filename: strin
   return 'unknown';
 }
 
-export function normalizeAttachmentContentType(mime: string | undefined, filename: string): string | undefined {
+export function normalizeAttachmentContentType(
+  mime: string | undefined,
+  filename: string,
+): string | undefined {
   const trimmed = mime?.trim();
   if (trimmed && ALLOWED_MIME.has(trimmed.toLowerCase())) {
     return trimmed.toLowerCase() === 'image/jpg' ? 'image/jpeg' : trimmed.toLowerCase();

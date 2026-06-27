@@ -74,7 +74,12 @@ export default function TrainingListRoute() {
 
         <View style={styles.recommendedCard}>
           {/* Ambient gradient (svg) */}
-          <Svg pointerEvents="none" style={styles.recommendedAmbientSvg} viewBox="0 0 100 100" preserveAspectRatio="none">
+          <Svg
+            pointerEvents="none"
+            style={styles.recommendedAmbientSvg}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
             <Defs>
               <RadialGradient id="recAmbientRight" cx="92%" cy="0%" r="70%">
                 <Stop offset="0%" stopColor={Colors.accent} stopOpacity={0.28} />
@@ -165,7 +170,7 @@ export default function TrainingListRoute() {
           q.isLoading ? (
             <Text style={styles.muted}>Loading…</Text>
           ) : q.isError ? (
-            <Text style={styles.muted}>Couldn't load trainings.</Text>
+            <Text style={styles.muted}>Couldn&apos;t load trainings.</Text>
           ) : (
             <Card>
               <Text style={styles.emptyTitle}>No trainings found</Text>

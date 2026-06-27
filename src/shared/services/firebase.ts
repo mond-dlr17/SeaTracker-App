@@ -20,7 +20,7 @@ function getApp(): { app: ReturnType<typeof initializeApp>; isNew: boolean } {
   if (existing.length) return { app: existing[0]!, isNew: false };
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
     throw new Error(
-      'Firebase config missing. Set EXPO_PUBLIC_FIREBASE_API_KEY and EXPO_PUBLIC_FIREBASE_PROJECT_ID in .env (see .env.example).'
+      'Firebase config missing. Set EXPO_PUBLIC_FIREBASE_API_KEY and EXPO_PUBLIC_FIREBASE_PROJECT_ID in .env (see .env.example).',
     );
   }
   return { app: initializeApp(firebaseConfig), isNew: true };
@@ -30,7 +30,9 @@ const { app, isNew } = getApp();
 
 // Persist auth in AsyncStorage so session survives app restarts; use getAuth when app already exists (e.g. hot reload)
 const persistence =
-  typeof (FirebaseAuth as any).getReactNativePersistence === 'function' ? (FirebaseAuth as any).getReactNativePersistence(AsyncStorage) : undefined;
+  typeof (FirebaseAuth as any).getReactNativePersistence === 'function'
+    ? (FirebaseAuth as any).getReactNativePersistence(AsyncStorage)
+    : undefined;
 export const firebaseAuth = isNew
   ? persistence
     ? FirebaseAuth.initializeAuth(app, { persistence })
@@ -38,4 +40,3 @@ export const firebaseAuth = isNew
   : FirebaseAuth.getAuth(app);
 export const firestore = getFirestore(app);
 export const storage = getStorage(app);
-

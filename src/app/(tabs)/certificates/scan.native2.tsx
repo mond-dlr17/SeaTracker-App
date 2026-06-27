@@ -82,7 +82,12 @@ export default function ScanCertificateRoute() {
 
   if (!hasPermission) {
     return (
-      <View style={[styles.permissionRoot, { paddingTop: insets.top + Spacing.lg, paddingBottom: insets.bottom + Spacing.lg }]}>
+      <View
+        style={[
+          styles.permissionRoot,
+          { paddingTop: insets.top + Spacing.lg, paddingBottom: insets.bottom + Spacing.lg },
+        ]}
+      >
         <Text style={styles.permissionTitle}>Camera access</Text>
         <Text style={styles.permissionBody}>
           Allow camera access to scan certificates and government IDs. Text is processed on your device.

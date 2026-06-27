@@ -38,4 +38,3 @@ const styles = StyleSheet.create({
   body: { color: Colors.text, fontWeight: '600', lineHeight: 22, marginTop: Spacing.xs },
   muted: { color: Colors.muted, fontWeight: '700' },
 });
-

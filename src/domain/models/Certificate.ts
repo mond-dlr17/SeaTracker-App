@@ -23,4 +23,3 @@ export type Certificate = {
   createdAt: number;
   updatedAt: number;
 };
-

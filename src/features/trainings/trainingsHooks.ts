@@ -7,4 +7,3 @@ export function useTrainings(courseType?: string) {
     queryFn: () => listTrainings(courseType),
   });
 }
-

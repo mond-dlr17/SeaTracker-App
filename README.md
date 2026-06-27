@@ -2,18 +2,18 @@
 
 ## Setup
 
-1) Install dependencies
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2) Configure env
+2. Configure env
 
 - Copy `.env.example` → `.env`
 - Fill in Firebase web config + API base URL
 
-3) Run
+3. Run
 
 ```bash
 npm run ios
@@ -50,4 +50,3 @@ Routes live under `src/app/`:
 - POST `/aiAdvisor`
   - body: `{ profile, certificates }`
   - response: `{ suggestions: string }`
-

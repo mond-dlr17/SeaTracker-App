@@ -80,9 +80,7 @@ export default function WelcomeRoute() {
             <Text style={styles.pillText}>PORT OS</Text>
           </View>
 
-          <Text style={styles.title}>
-            Track your seafarer{'\n'}career
-          </Text>
+          <Text style={styles.title}>Track your seafarer{'\n'}career</Text>
           <Text style={styles.subtitle}>
             Stay compliant. Stay ready. Manage documents and sea time effortlessly.
           </Text>
@@ -261,4 +259,3 @@ const styles = StyleSheet.create({
     textDecorationColor: Colors.border,
   },
 });
-

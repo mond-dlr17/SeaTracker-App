@@ -10,4 +10,3 @@ export type UserProfile = {
   updatedAt: number;
   expoPushToken?: string;
 };
-

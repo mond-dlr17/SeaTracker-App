@@ -16,7 +16,9 @@ Notifications.setNotificationHandler({
 
 export async function ensurePushToken(uid: string) {
   const current = await getDoc(doc(firestore, 'users', uid));
-  const existing = current.exists() ? (current.data() as { expoPushToken?: string }).expoPushToken : undefined;
+  const existing = current.exists()
+    ? (current.data() as { expoPushToken?: string }).expoPushToken
+    : undefined;
 
   const perms = await Notifications.getPermissionsAsync();
   const finalStatus =
@@ -24,10 +26,10 @@ export async function ensurePushToken(uid: string) {
   if (finalStatus !== 'granted') return;
 
   const projectId =
-    (Constants.expoConfig?.extra as any)?.eas?.projectId ?? (Constants.easConfig?.projectId as string | undefined);
+    (Constants.expoConfig?.extra as any)?.eas?.projectId ??
+    (Constants.easConfig?.projectId as string | undefined);
 
   const token = (await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined)).data;
   if (existing === token) return;
   await updateDoc(doc(firestore, 'users', uid), { expoPushToken: token, updatedAt: Date.now() });
 }
-

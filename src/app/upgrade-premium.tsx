@@ -64,10 +64,7 @@ export default function UpgradePremiumModalRoute() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 110 },
-        ]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 110 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.hero}>
@@ -154,7 +151,7 @@ export default function UpgradePremiumModalRoute() {
                 <Stop offset="30%" stopColor={Colors.accent} stopOpacity="0.12" />
                 <Stop offset="70%" stopColor={Colors.accent} stopOpacity="0.05" />
               </RadialGradient>
-             
+
               <Rect x="0" y="0" width="100" height="100" />
             </Defs>
             <Rect x="0" y="0" width="100" height="100" fill="url(#pricingAmbientRight)" />
@@ -205,10 +202,7 @@ export default function UpgradePremiumModalRoute() {
           onPress={() => {
             // UI-only placeholder. Replace with real checkout flow.
           }}
-          style={({ pressed }) => [
-            styles.upgradeBtn,
-            pressed ? { opacity: 0.9 } : null,
-          ]}
+          style={({ pressed }) => [styles.upgradeBtn, pressed ? { opacity: 0.9 } : null]}
           accessibilityRole="button"
           accessibilityLabel="Upgrade Now"
         >
@@ -527,7 +521,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
     elevation: 4,
@@ -553,4 +547,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

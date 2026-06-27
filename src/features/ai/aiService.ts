@@ -10,4 +10,3 @@ export async function aiAdvisor(params: { profile: UserProfile; certificates: Ce
   const res = await api.post<AIAdvisorResponse>('/aiAdvisor', params);
   return res.data;
 }
-

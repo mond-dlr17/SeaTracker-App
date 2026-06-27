@@ -45,7 +45,7 @@ export default function AIAdvisorRoute() {
       </Card>
 
       {suggestions ? (
-      <Card style={[styles.card, styles.suggestionsCard as ViewStyle]}>
+        <Card style={[styles.card, styles.suggestionsCard as ViewStyle]}>
           <Text style={styles.sectionLabel}>Suggestions</Text>
           <Text style={styles.suggestions}>{suggestions}</Text>
         </Card>

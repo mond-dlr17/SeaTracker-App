@@ -8,4 +8,3 @@ export function usePosts() {
 export function usePost(postId: string) {
   return useQuery({ queryKey: ['posts', postId], queryFn: () => getPost(postId) });
 }
-

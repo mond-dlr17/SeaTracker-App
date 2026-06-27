@@ -12,25 +12,15 @@ module.exports = [
       // meaningful: console is discouraged, intentional warns opt out explicitly.
       'no-console': 'warn',
 
-      // React Compiler rules are new in Expo SDK 55. The existing codebase
-      // predates them, so adopt incrementally as warnings (a burn-down backlog)
-      // rather than blocking CI on pre-existing patterns. Promote to "error"
-      // once outstanding violations are cleared.
-      'react-hooks/immutability': 'warn',
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/purity': 'warn',
-      'react/no-unescaped-entities': 'warn',
+      // React Compiler correctness rules (new in Expo SDK 55). Existing
+      // violations have been cleared, so these are enforced as errors.
+      'react-hooks/immutability': 'error',
+      'react-hooks/set-state-in-effect': 'error',
+      'react-hooks/purity': 'error',
+      'react/no-unescaped-entities': 'error',
     },
   },
   {
-    ignores: [
-      'dist/*',
-      'ios/*',
-      'android/*',
-      '.expo/*',
-      'node_modules/*',
-      'assets/*',
-      'ReactotronConfig.ts',
-    ],
+    ignores: ['dist/*', 'ios/*', 'android/*', '.expo/*', 'node_modules/*', 'assets/*', 'ReactotronConfig.ts'],
   },
 ];

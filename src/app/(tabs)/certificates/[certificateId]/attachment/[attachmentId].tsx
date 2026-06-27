@@ -1,13 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Galeria } from '@nandorojo/galeria';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -41,9 +33,7 @@ export default function CertificateAttachmentViewerRoute() {
     return listCertificateAttachments(cert).find((a) => a.id === attachmentId) ?? null;
   }, [cert, attachmentId]);
 
-  const kind = attachment
-    ? attachmentKindFromMime(attachment.contentType, attachment.filename)
-    : 'unknown';
+  const kind = attachment ? attachmentKindFromMime(attachment.contentType, attachment.filename) : 'unknown';
 
   const imageGallery = useMemo(() => {
     if (!cert || !attachment || kind !== 'image') return { urls: [] as string[], index: 0 };
@@ -54,7 +44,10 @@ export default function CertificateAttachmentViewerRoute() {
     if (urls.length === 0) {
       return { urls: [attachment.url], index: 0 };
     }
-    const index = Math.max(0, imgs.findIndex((a) => a.id === attachmentId));
+    const index = Math.max(
+      0,
+      imgs.findIndex((a) => a.id === attachmentId),
+    );
     return { urls, index };
   }, [cert, attachment, kind, attachmentId]);
 
@@ -135,9 +128,7 @@ export default function CertificateAttachmentViewerRoute() {
             </Galeria.Image>
           </Galeria>
         </View>
-        {Platform.OS !== 'web' ? (
-          <Text style={styles.galeriaHint}>Tap the image to zoom and pan</Text>
-        ) : null}
+        {Platform.OS !== 'web' ? <Text style={styles.galeriaHint}>Tap the image to zoom and pan</Text> : null}
       </View>
     );
   }

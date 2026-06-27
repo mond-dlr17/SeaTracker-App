@@ -53,7 +53,10 @@ export async function loginWithEmail(email: string, password: string): Promise<U
 }
 
 export async function registerWithEmail(
-  params: Pick<UserProfile, 'fullName' | 'rank' | 'yearsOfExperience' | 'vesselTypes'> & { email: string; password: string },
+  params: Pick<UserProfile, 'fullName' | 'rank' | 'yearsOfExperience' | 'vesselTypes'> & {
+    email: string;
+    password: string;
+  },
 ) {
   let cred: UserCredential;
   try {
@@ -76,8 +79,10 @@ export async function registerWithEmail(
 
   try {
     await setDoc(doc(firestore, 'users', cred.user.uid), profile);
-  } catch (e) {
-    throw new Error('Account created but profile could not be saved. Please try signing in and update your profile.');
+  } catch {
+    throw new Error(
+      'Account created but profile could not be saved. Please try signing in and update your profile.',
+    );
   }
 
   return cred;
@@ -116,7 +121,9 @@ export async function logout() {
   return await signOut(firebaseAuth);
 }
 
-export async function updateUserProfile(uid: string, patch: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>) {
+export async function updateUserProfile(
+  uid: string,
+  patch: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>,
+) {
   await updateDoc(doc(firestore, 'users', uid), { ...patch, updatedAt: Date.now() });
 }
-

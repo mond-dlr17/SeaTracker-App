@@ -24,7 +24,9 @@ export default function RegisterRoute() {
   const vesselTypeOptions = ['Tanker', 'Cargo', 'Bulker', 'Passenger', 'Offshore', 'LNG/LPG'] as const;
 
   const toggleVesselType = (vesselType: string) => {
-    setSelectedVesselTypes((prev) => (prev.includes(vesselType) ? prev.filter((t) => t !== vesselType) : [...prev, vesselType]));
+    setSelectedVesselTypes((prev) =>
+      prev.includes(vesselType) ? prev.filter((t) => t !== vesselType) : [...prev, vesselType],
+    );
   };
 
   const submit = async () => {
@@ -82,11 +84,18 @@ export default function RegisterRoute() {
             </View>
 
             <Text style={styles.title}>Set your course</Text>
-            <Text style={styles.subtitle}>Let's personalize your career dashboard and compliance alerts.</Text>
+            <Text style={styles.subtitle}>
+              Let&apos;s personalize your career dashboard and compliance alerts.
+            </Text>
           </View>
 
           <Card style={styles.card}>
-            <TextField label="Full Name" value={fullName} onChangeText={setFullName} placeholder="e.g. Capt. James Thorne" />
+            <TextField
+              label="Full Name"
+              value={fullName}
+              onChangeText={setFullName}
+              placeholder="e.g. Capt. James Thorne"
+            />
             <TextField
               label="Current Rank"
               value={rank}
@@ -131,8 +140,20 @@ export default function RegisterRoute() {
               </View>
             </View>
 
-            <TextField label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="you@company.com" />
-            <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
+            <TextField
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              placeholder="you@company.com"
+            />
+            <TextField
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholder="••••••••"
+            />
           </Card>
 
           <View style={{ height: Spacing.xxl }} />

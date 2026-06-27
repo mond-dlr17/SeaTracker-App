@@ -19,7 +19,15 @@ export function WelcomeCompassSvg({ size = 256, ...props }: { size?: number } & 
       <Circle cx="100" cy="100" r="92" fill={Colors.accent} opacity={0.1} filter="url(#glow)" />
 
       {/* Outer Track Layers */}
-      <Circle cx="100" cy="100" r="90" stroke={Colors.primary} strokeWidth="1.5" strokeOpacity={0.08} fill="none" />
+      <Circle
+        cx="100"
+        cy="100"
+        r="90"
+        stroke={Colors.primary}
+        strokeWidth="1.5"
+        strokeOpacity={0.08}
+        fill="none"
+      />
       <Circle
         cx="100"
         cy="100"
@@ -30,7 +38,15 @@ export function WelcomeCompassSvg({ size = 256, ...props }: { size?: number } & 
         strokeOpacity={0.15}
         fill="none"
       />
-      <Circle cx="100" cy="100" r="60" stroke={Colors.primary} strokeWidth="1" strokeOpacity={0.08} fill="none" />
+      <Circle
+        cx="100"
+        cy="100"
+        r="60"
+        stroke={Colors.primary}
+        strokeWidth="1"
+        strokeOpacity={0.08}
+        fill="none"
+      />
       <Circle cx="100" cy="100" r="54" fill={Colors.primary} fillOpacity={0.03} />
 
       {/* Compass Directional Indicators */}
@@ -82,4 +98,3 @@ export function WelcomeCompassSvg({ size = 256, ...props }: { size?: number } & 
     </Svg>
   );
 }
-

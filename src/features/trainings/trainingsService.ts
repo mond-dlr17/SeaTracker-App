@@ -11,8 +11,9 @@ export type Training = {
 
 export async function listTrainings(courseType?: string): Promise<Training[]> {
   const base = collection(firestore, 'trainings');
-  const q = courseType ? query(base, where('courseType', '==', courseType), orderBy('title', 'asc')) : query(base);
+  const q = courseType
+    ? query(base, where('courseType', '==', courseType), orderBy('title', 'asc'))
+    : query(base);
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Training, 'id'>) }));
 }
-

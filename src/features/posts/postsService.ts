@@ -20,4 +20,3 @@ export async function getPost(postId: string): Promise<Post | null> {
   if (!snap.exists()) return null;
   return { id: snap.id, ...(snap.data() as Omit<Post, 'id'>) };
 }
-

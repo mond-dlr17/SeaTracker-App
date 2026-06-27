@@ -14,4 +14,3 @@ export function getCertificateStatus(expiryDate: string, _issueDate?: string): C
   if (daysLeft <= 30) return 'warning';
   return 'valid';
 }
-

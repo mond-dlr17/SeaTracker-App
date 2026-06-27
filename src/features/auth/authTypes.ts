@@ -6,4 +6,3 @@ export type AuthState = {
   profile: UserProfile | null;
   initializing: boolean;
 };
-

@@ -28,4 +28,3 @@ export const Env = {
     appId: getExtra().firebase?.appId ?? '',
   },
 } as const;
-

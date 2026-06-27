@@ -27,7 +27,12 @@ function certsCollection(uid: string) {
 
 function normalizeToNumber(value: unknown): number {
   if (typeof value === 'number') return value;
-  if (value && typeof value === 'object' && 'toDate' in value && typeof (value as any).toDate === 'function') {
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toDate' in value &&
+    typeof (value as any).toDate === 'function'
+  ) {
     return (value as any).toDate().valueOf();
   }
   return 0;
@@ -35,7 +40,12 @@ function normalizeToNumber(value: unknown): number {
 
 function normalizeToISODate(value: unknown): string {
   if (typeof value === 'string') return value;
-  if (value && typeof value === 'object' && 'toDate' in value && typeof (value as any).toDate === 'function') {
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toDate' in value &&
+    typeof (value as any).toDate === 'function'
+  ) {
     const d = (value as any).toDate();
     return dayjs(d).format('YYYY-MM-DD');
   }
@@ -156,9 +166,14 @@ export async function addCertificate(
 export async function updateCertificate(
   uid: string,
   certificateId: string,
-  patch: Partial<Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'filePath' | 'fileUrl' | 'attachments'>>,
+  patch: Partial<
+    Pick<Certificate, 'name' | 'issueDate' | 'expiryDate' | 'filePath' | 'fileUrl' | 'attachments'>
+  >,
 ) {
-  await updateDoc(doc(firestore, 'users', uid, 'certificates', certificateId), { ...patch, updatedAt: Date.now() });
+  await updateDoc(doc(firestore, 'users', uid, 'certificates', certificateId), {
+    ...patch,
+    updatedAt: Date.now(),
+  });
 }
 
 export async function removeCertificate(uid: string, certificateId: string) {
@@ -270,7 +285,7 @@ export async function seedSampleCertificates(uid: string): Promise<void> {
   const now = dayjs();
   const image = await getOrCreateSampleCertificateImage();
 
-  const samples: Array<Pick<Certificate, 'name' | 'issueDate' | 'expiryDate'>> = [
+  const samples: Pick<Certificate, 'name' | 'issueDate' | 'expiryDate'>[] = [
     {
       name: 'STCW Basic Safety Training',
       issueDate: now.subtract(1, 'year').format('YYYY-MM-DD'),
@@ -300,4 +315,3 @@ export async function seedSampleCertificates(uid: string): Promise<void> {
     });
   }
 }
-
