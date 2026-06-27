@@ -1,0 +1,36 @@
+---
+description: TypeScript coding standards for the SeaTrack codebase
+globs: **/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript Standards
+
+`strict` is on. Keep it green — no `// @ts-ignore` without a justifying comment.
+
+## Naming
+
+- Files: components/types → PascalCase (`Certificate.ts`, `Button.tsx`); services/hooks/utils → camelCase (`certificatesService.ts`, `formatDate.ts`).
+- `type` over `interface` for models/props (matches existing code). `PascalCase` types, `camelCase` values, `UPPER_SNAKE` constants.
+
+## Typing
+
+- Type all exported function params and return values. Don't leak `any` across boundaries.
+- When mapping untrusted external data (Firestore docs, API JSON), narrow explicitly and use `satisfies` to verify the shape:
+
+```ts
+return {
+  id: d.id,
+  name: String(data.name ?? ''),
+  expiryDate: normalizeToISODate(data.expiryDate),
+} satisfies Certificate;
+```
+
+- Use `Pick`/`Partial`/`Omit` to derive input types from domain models instead of redefining them.
+- Prefer `as const` for literal config objects (keys, palettes, theme scales).
+
+## Practices
+
+- No unused exports/vars. Avoid default exports except Expo Router route files.
+- Don't narrate code with comments; comment only non-obvious intent, edge cases, or platform quirks (as the existing services do).
+- Handle async errors deliberately — swallow only with a `console.warn` and a reason (e.g. best-effort storage cleanup), never an empty `catch {}` silently.

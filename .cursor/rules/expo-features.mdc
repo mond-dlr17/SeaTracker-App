@@ -1,0 +1,31 @@
+---
+description: Expo SDK usage, config plugins, env/secrets, Firebase, and native modules
+alwaysApply: true
+---
+
+# Expo Features, Config & Native
+
+## Config & build
+
+- App config is `app.config.ts` (TS, dynamic). Add native modules' config plugins here (e.g. `react-native-vision-camera`, `expo-build-properties`). Don't hand-edit `/ios` or `/android` — they are generated and gitignored.
+- This app uses a Dev Client (`expo-dev-client`) + custom native code. After adding a config plugin or native dependency, a rebuild (`npm run ios` / `npm run android`) is required — it won't work in plain Expo Go.
+
+## Env & secrets
+
+- Public runtime config uses `EXPO_PUBLIC_*` vars (see `.env.example`), surfaced through `app.config.ts` `extra`, and read ONLY via `shared/services/env.ts` (`Env.*`). Never read `process.env` or `Constants.expoConfig.extra` elsewhere.
+- `.env` is gitignored. Never commit real secrets; update `.env.example` when adding a key.
+
+## Firebase
+
+- Initialize once in `shared/services/firebase.ts` and import `firebaseAuth`, `firestore`, `storage` from there. Never call `initializeApp` elsewhere.
+- Auth persists via AsyncStorage. Firestore/Storage access belongs in feature `*Service.ts` files only.
+
+## REST / AI
+
+- HTTP goes through the shared axios client `shared/services/api.ts` (`api`), base URL from `Env.apiBaseUrl`. Define endpoint functions in the relevant feature service.
+
+## Expo modules
+
+- Prefer Expo modules over community alternatives when available (`expo-file-system`, `expo-notifications`, `expo-document-picker`, `expo-crypto`, `expo-web-browser`).
+- Pin Expo-managed packages to the SDK version with `npx expo install <pkg>` (not raw `npm install`).
+- Guard platform-specific / dev-only code (e.g. Reactotron) with `Platform.OS` and `__DEV__`.

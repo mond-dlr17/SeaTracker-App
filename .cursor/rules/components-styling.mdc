@@ -1,0 +1,32 @@
+---
+description: React Native component patterns, theming, and styling conventions
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# Components & Styling
+
+## Components
+
+- Functional components only; export named (not default) except Expo Router route files.
+- PascalCase file + component name for UI (`Button.tsx`). Co-locate styles in the same file.
+- Type props inline or with a local `type Props = {...}`. Prefer composition; build on shared primitives (`Screen`, `Card`, `Button`, `TextField`, `Badge`).
+- Wrap screen content in `<Screen>` so safe-area insets + background are handled consistently.
+
+## Styling
+
+- Use `StyleSheet.create` at the bottom of the file. No inline style objects for anything non-trivial.
+- NEVER hardcode colors, spacing, or radii. Always pull from the design system:
+
+```tsx
+import { Colors } from '../utils/colors';
+import { Radius, Spacing, Typography } from '../utils/theme';
+
+const styles = StyleSheet.create({
+  card: { backgroundColor: Colors.surface, borderRadius: Radius.card, padding: Spacing.cardPadding },
+});
+```
+
+- New colors/spacing/type scales must be added to `shared/utils/colors.ts` or `theme.ts` first, then referenced.
+- Icons: `@expo/vector-icons` (`Ionicons`), tint with `Colors`.
+- Account for safe areas via `useSafeAreaInsets()` / `<Screen>`; never assume fixed top/bottom padding.

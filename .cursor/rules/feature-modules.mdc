@@ -1,0 +1,36 @@
+---
+description: Feature module structure, data layer, TanStack Query, and state conventions
+globs: src/features/**
+alwaysApply: false
+---
+
+# Feature Modules & Data/State
+
+Each feature is a folder under `src/features/<feature>/` and owns its data layer + hooks.
+
+## File roles (name files `<feature><Role>.ts`)
+
+- `<feature>Service.ts` — pure async data functions (Firebase/axios). No React. Returns `domain` types.
+- `<feature>Hooks.ts` — TanStack Query hooks wrapping the service. UI imports these, never the service.
+- `<feature>Types.ts` / `*Provider.tsx` — feature-local types/context (e.g. `AuthProvider.tsx`).
+
+## TanStack Query rules
+
+- Export a query-key factory, don't inline keys:
+
+```ts
+export function certificatesKey(uid: string) {
+  return ['certificates', uid] as const;
+}
+```
+
+- Queries gate on inputs with `enabled: !!uid`.
+- Mutations invalidate affected keys in `onSuccess` (invalidate list + detail together via `Promise.all`).
+- Map raw Firestore docs into clean `domain` models inside the service (normalize dates/numbers there), so hooks/UI never touch raw snapshots.
+
+## State boundaries
+
+- Server/remote state → TanStack Query (configured in `core/providers/AppProviders`).
+- Cross-cutting session state (current user/profile) → React Context (`AuthProvider`) via `useAuth()`.
+- Ephemeral global UI state → Zustand (already a dependency). Local state → `useState`.
+- Don't duplicate server data into Zustand/Context; read it from Query.

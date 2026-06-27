@@ -1,0 +1,33 @@
+---
+description: Expo Router routing, layouts, navigation, and auth-gating conventions
+globs: src/app/**
+alwaysApply: false
+---
+
+# Expo Router Conventions
+
+Routes live ONLY under `src/app/`. Entry is `expo-router/entry` (see `package.json` `main`).
+
+## Structure
+
+- Route groups in parens don't affect the URL: `(auth)`, `(tabs)`.
+- Each segment with children has a `_layout.tsx` that renders a `<Stack>` or `<Tabs>`.
+- Dynamic segments use brackets: `[certificateId]`, `[attachmentId]`.
+- Modals: declare in the parent `<Stack.Screen>` with `presentation: 'modal'` (e.g. `upgrade-premium`).
+
+```
+app/
+  _layout.tsx              # Root: SafeAreaProvider → AppProviders → StatusBar → AuthGate(Stack)
+  (auth)/_layout.tsx       # welcome, login, register
+  (tabs)/_layout.tsx       # <Tabs> with custom FloatingTabBar
+    certificates/[certificateId]/...
+```
+
+## Rules
+
+- Screens are thin: render UI + call feature hooks. NO Firebase/axios calls directly in route files.
+- Get params with `useLocalSearchParams()`; navigate with `useRouter()` / `<Link>`. Use typed string routes like `/(tabs)/certificates`.
+- Auth gating happens once in the root `AuthGate` (redirect via `router.replace` based on `useSegments()` + `useAuth()`). Don't re-implement auth redirects per screen.
+- Configure headers/title via `screenOptions` / `<Stack.Screen options>`, sourcing styles from `Colors`.
+- Private helper route files use an underscore prefix (`_FloatingTabBar.tsx`) so Router ignores them.
+- Platform-specific route variants use platform suffixes (`scan.native2.tsx`, `scan.web2.tsx`).

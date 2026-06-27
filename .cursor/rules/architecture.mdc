@@ -1,0 +1,39 @@
+---
+description: SeaTrack app architecture, layered folder structure, and dependency rules
+alwaysApply: true
+---
+
+# SeaTrack Architecture
+
+Expo SDK 55 · React 19 · React Native 0.83 · Expo Router · TypeScript (strict) · Firebase · TanStack Query.
+
+## Layered folder structure (`src/`)
+
+```
+src/
+  app/        # Expo Router routes ONLY (file-based). Groups: (auth), (tabs).
+  core/       # App-wide composition: providers, bootstrap. No feature logic.
+  features/   # Self-contained feature modules (auth, certificates, trainings, posts, ai, subscription, documentScan)
+  domain/     # Framework-agnostic types/models (domain/models/*). No React, no Firebase.
+  shared/     # Cross-feature building blocks: components/, services/ (api, env, firebase), utils/ (colors, theme, formatDate, validation)
+```
+
+## Dependency direction (never violate)
+
+`app` → `features` / `core` → `shared` → `domain`
+
+- `domain` depends on nothing. Pure types only.
+- `shared` may use `domain`, never `features` or `app`.
+- `features` may use `shared` + `domain`, never `app` and never another feature's internals.
+- `app` (routes) wires features together but holds no business logic.
+
+## Where code goes
+
+- New screen/route → `src/app/...` (thin: render + wire hooks, no data logic).
+- New data/business logic → `src/features/<feature>/`.
+- Reusable UI with no feature knowledge → `src/shared/components/`.
+- A type shared across features → `src/domain/models/`.
+
+## Imports
+
+Use relative imports (this repo has no path aliases): `import { Colors } from '../../shared/utils/colors'`. Keep external → internal import groups separated by a blank line.

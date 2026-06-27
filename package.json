@@ -6,7 +6,12 @@
     "start": "npx expo start",
     "android": "npx expo run:android --device",
     "ios": "npx expo run:ios --device",
-    "web": "npx expo start --web"
+    "web": "npx expo start --web",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -47,6 +52,10 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "^9",
+    "eslint-config-expo": "^56.0.4",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.0",
     "reactotron-react-native": "^5.1.18",
     "typescript": "~5.9.2"
   },
